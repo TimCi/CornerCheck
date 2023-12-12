@@ -4,9 +4,9 @@
 #include "credentials.h"
 
 
-void initHomeWifi(const char *ssid, const char* password)
+void initHomeWifi(const char *ssid)
 {
-  WiFi.begin(ssid, password);
+  WiFi.begin(ssid, HOME_PASSWORD);
    
   Serial.print("Connecting to WiFi ..");
   while (WiFi.status() != WL_CONNECTED) {
