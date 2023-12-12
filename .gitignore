@@ -1,2 +1,2 @@
 # ignore wifi credentials
-/src/custom_libraries/custom_wfi_init/credentials.h
+**/credentials.h
