@@ -27,6 +27,17 @@ struct timeval tv_now;
 // NTP Server for time synchronization
 const char* ntpServer = "pool.ntp.org";
 
+#define SoundSensorPin 3  // this pin read the analog voltage from the sound level meter
+#define VREF  5 // voltage on AREF pin,default:operating voltage
+
+const int measurementInterval = 125; // in ms
+const int sendingInterval = 1000; // in ms
+
+unsigned long previousMillis = 0; // last time, the sensor was read
+float dbaSum = 0; // Sum of the dBA-values per sendingInterval
+int readingCount = 0; // Count readings per sendingInterval
+int sendingCounter = 1; // Count sendings
+
 void messageSent(const uint8_t *macAddr, esp_now_send_status_t status) {
   Serial.print("Send status: ");
   if(status == ESP_NOW_SEND_SUCCESS){
@@ -47,6 +58,7 @@ void setup(){
 
   // estatblish wifi connection
   initUniWiFi("uni-ms");
+  //initHomeWifi(""); // for testing
   
   Serial.println("synchronizing NTP Server");
   // time server synchronization
@@ -86,22 +98,51 @@ void setup(){
 }
  
 void loop(){
-  // fetch random decibel value
-  myMessage.decibel = rand();
+  unsigned long currentMillis = millis(); // current time in ms
+  // check if measurementInterval expired
+  if (currentMillis - previousMillis >= measurementInterval) 
+  {
+    float voltageValue,dbaValue;
+    voltageValue = analogReadMilliVolts(SoundSensorPin) / 1000.0; // measure Voltage of Sensor
+    dbaValue = voltageValue * 50.0 * 2;  //convert voltage to decibel value
+    //print measurements for testing:
+    //Serial.print(dbaValue,1);
+    //Serial.println(" dBA");
 
-  // get current time in seconds
-  gettimeofday(&tv_now, NULL);
-  int64_t seconds = (int64_t)tv_now.tv_sec;
-
-  myMessage.sending_time = seconds;
-  esp_err_t result = esp_now_send(receiverAddress, (uint8_t *) &myMessage, sizeof(myMessage));
-  if (result != ESP_OK) {
-      Serial.println("Sending error");
+    // update global variables:
+    dbaSum += dbaValue;
+    readingCount++;
+    previousMillis = currentMillis;
   }
-  Serial.println("Message send: ");
-  Serial.print("Decibel [dB]: ");
-  Serial.println(myMessage.decibel);
-  Serial.print("Sending time [s sind 01.01.1970]: ");
-  Serial.println(myMessage.sending_time);
-  delay(1000);
+
+  // check if sendingInterval expired
+  if (currentMillis >= sendingInterval * sendingCounter) 
+  {
+    // Calculate average DBA-Value and cast into int for efficient communication
+    // ATTENTION: For better accuracy the value is multiplicated by 10 before the cast
+    int averageDbaValueM10 = int(dbaSum * 10 / readingCount);
+    //Serial.println("Average dBA-Value in last " + String(sendingInterval) + " ms: " + String(averageDbaValueM10));
+    
+    // safe dBA-Value in message
+    myMessage.decibel = averageDbaValueM10;
+
+    // get current time in seconds
+    gettimeofday(&tv_now, NULL);
+    int64_t seconds = (int64_t)tv_now.tv_sec;
+
+    myMessage.sending_time = seconds;
+    esp_err_t result = esp_now_send(receiverAddress, (uint8_t *) &myMessage, sizeof(myMessage));
+    if (result != ESP_OK) {
+        Serial.println("Sending error");
+    }
+    Serial.println("Message send: ");
+    Serial.print("Decibel [dB]: ");
+    Serial.println(myMessage.decibel);
+    Serial.print("Sending time [s sind 01.01.1970]: ");
+    Serial.println(myMessage.sending_time);
+
+    sendingCounter++;
+    dbaSum=0;
+    readingCount=0;
+  }
 }
