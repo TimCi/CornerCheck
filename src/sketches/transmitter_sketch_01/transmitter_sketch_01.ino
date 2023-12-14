@@ -1,3 +1,4 @@
+#include <math.h>
 #include <esp_now.h>
 #include <esp_wifi.h>
 #include <WiFi.h>
@@ -5,7 +6,8 @@
 #include "custom_wifi_init.h"
 
 // MAC adresses
-uint8_t receiverAddress[] = {0x4D, 0x61, 0x72, 0x74, 0x69, 0x02};
+//uint8_t receiverAddress[] = {0x4D, 0x61, 0x72, 0x74, 0x69, 0x02};
+uint8_t receiverAddress[] = {0x4E, 0xA1, 0x72, 0x74, 0x69, 0x02};
 uint8_t myAddress[] = {0x54, 0x69, 0x6D, 0x0A, 0x00, 0x01};
 
 // Information of the device to connect to
@@ -28,7 +30,7 @@ struct timeval tv_now;
 const char* ntpServer = "pool.ntp.org";
 
 #define SoundSensorPin 3  // this pin read the analog voltage from the sound level meter
-#define VREF  5 // voltage on AREF pin,default:operating voltage
+#define VREF  5.0 // voltage on AREF pin,default:operating voltage
 
 const int measurementInterval = 125; // in ms
 const int sendingInterval = 1000; // in ms
@@ -53,6 +55,8 @@ void setup(){
   Serial.begin(115200);
   delay(3000);
 
+  analogReadResolution(13);
+
   // intialize RNG
   srand(1);
 
@@ -70,6 +74,8 @@ void setup(){
   Serial.println("NTP Server synchronized");
 
   WiFi.mode(WIFI_STA);
+  Serial.print("Old ESP Board MAC Address:  ");
+  Serial.println(WiFi.macAddress());
   esp_wifi_set_mac(WIFI_IF_STA, myAddress);
   Serial.print("New ESP Board MAC Address:  ");
   Serial.println(WiFi.macAddress());  
@@ -104,13 +110,13 @@ void loop(){
   {
     float voltageValue,dbaValue;
     voltageValue = analogReadMilliVolts(SoundSensorPin) / 1000.0; // measure Voltage of Sensor
-    dbaValue = voltageValue * 50.0 * 2;  //convert voltage to decibel value
+    dbaValue = voltageValue * 50.0;  //convert voltage to decibel value
     //print measurements for testing:
     //Serial.print(dbaValue,1);
     //Serial.println(" dBA");
 
     // update global variables:
-    dbaSum += dbaValue;
+    dbaSum += pow(10,(dbaValue / 10));
     readingCount++;
     previousMillis = currentMillis;
   }
@@ -120,7 +126,7 @@ void loop(){
   {
     // Calculate average DBA-Value and cast into int for efficient communication
     // ATTENTION: For better accuracy the value is multiplicated by 10 before the cast
-    int averageDbaValueM10 = int(dbaSum * 10 / readingCount);
+    int averageDbaValueM10 = int(10 * 10 * log10(dbaSum / readingCount));
     //Serial.println("Average dBA-Value in last " + String(sendingInterval) + " ms: " + String(averageDbaValueM10));
     
     // safe dBA-Value in message

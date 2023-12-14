@@ -5,7 +5,8 @@
 #include "custom_wifi_init.h"
 
 // MAC adress 
-uint8_t myAddress[] = {0x4D, 0x61, 0x72, 0x74, 0x69, 0x02};
+//uint8_t myAddress[] = {0x4D, 0x61, 0x72, 0x74, 0x69, 0x02};
+uint8_t myAddress[] = {0x4E, 0xA1, 0x72, 0x74, 0x69, 0x02};
 
 typedef struct data {
     int decibel;
@@ -49,7 +50,7 @@ void setup(){
 
   // estatblish wifi connection
   initUniWiFi("uni-ms");
-  //initHomeWifi("") // for testing
+  //initHomeWifi(""); // for testing
   
   Serial.println("synchronizing NTP Server");
   // time server synchronization
@@ -61,7 +62,12 @@ void setup(){
   Serial.println("NTP Server synchronized");
 
   WiFi.mode(WIFI_STA);
-  esp_wifi_set_mac(WIFI_IF_STA, myAddress);
+  Serial.print("Old ESP Board MAC Address:  ");
+  Serial.println(WiFi.macAddress());
+  //if (esp_wifi_set_mac(WIFI_IF_STA, myAddress) != ESP_OK) {Serial.println("Fehler");}
+  Serial.println(esp_wifi_set_mac(WIFI_IF_STA, myAddress));
+  Serial.print("New ESP Board MAC Address:  ");
+  Serial.println(WiFi.macAddress());
   
   if (esp_now_init() == ESP_OK) {
       Serial.println("ESPNow Init success");
@@ -87,6 +93,7 @@ void loop(){
     // Serial.print("\n");
     
     float secondValues[3];
+  secondValues[0] = 0; secondValues[1] = 0; secondValues[2] = 0;
 
     for(int i=0; i<3; i++){
       // Change dBA*10 ints to normal dBA floats
@@ -132,7 +139,7 @@ void loop(){
     {
       dbaMax = max_dBA;
     }
-    dbaSum += secondValues[0] + secondValues[1] + secondValues[2];
+    dbaSum += pow(10,(secondValues[0] / 10.0)) + pow(10,(secondValues[1] / 10.0)) + pow(10,(secondValues[2] / 10.0));
     readingCount++;
     previousMillis = currentMillis;
   }
@@ -142,11 +149,10 @@ void loop(){
   {
     // Calculate average DBA-Value and cast into int for efficient communication
     // ATTENTION: For better accuracy the value is multiplicated by 10 before the cast
-    int averageDbaValueM10 = int(dbaSum * 10 / (readingCount * 3));
+    int averageDbaValueM10 = int(10 * 10 * log10(dbaSum / (readingCount * 3)));
     Serial.println("Average dBA-Value in last " + String(sendingInterval) + " ms: " + String(averageDbaValueM10));
     int maxDbaValueM10 = int(dbaMax * 10);
     Serial.println("Max dBA-Value in last " + String(sendingInterval) + " ms: " + String(maxDbaValueM10));
-    Serial.println(readingCount);
     // TODO: send maximum and average every min for reporting to opensensemap-cloud
     
     // update global variables:
