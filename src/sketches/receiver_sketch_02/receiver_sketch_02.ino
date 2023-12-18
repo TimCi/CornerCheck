@@ -88,6 +88,7 @@ void setup()
   }
 
   esp_now_register_recv_cb(onMessageReceived);
+  matrix.begin(0x70); // pass in the address
 }
 
 static const uint8_t PROGMEM
