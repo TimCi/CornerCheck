@@ -47,7 +47,12 @@ async function readTextareas()
         let midData = await midResponse.json();
         let rightData = await rightResponse.json();
 
-        console.log(leftData)
+        //console.log(leftData)
+
+        localStorage.setItem("leftData", JSON.stringify(leftData));
+        localStorage.setItem("midData", JSON.stringify(midData));
+        localStorage.setItem("rightData", JSON.stringify(rightData));
+        window.location.href = '/short_vis'
     }
       
 }
