@@ -1,0 +1,30 @@
+doctype html
+head
+  meta(charset='UTF-8')
+  meta(http-equiv='X-UA-Compatible' content='IE=edge')
+  meta(name='viewport' content='width=device-width, initial-scale=1.0')
+  title CornerCheck Visualisierung
+  link(rel='stylesheet' href='/stylesheets/styleVis.css')
+  script(src='https://cdn.plot.ly/plotly-2.28.0.min.js' charset='utf-8')
+.container
+  h1 CornerCheck
+  #chart
+  
+  div
+    label(for='timespan') Select Timespan:
+    input#timespan(type='number' value='45' min='1' max='120')
+    label(for='threshold') Set Threshold (dB):
+    input#threshold(type='number' value='55' min='0' max='100')
+    //- skript einladen
+    script(src="/javascripts/visualizeShort.js") 
+  #stats
+    p
+      |Average Decibles: 
+      span#average 0
+      |  dB
+
+    p
+      | Maximum Decibels: 
+      span#maximum 0
+      |  dB
+    p#warning
