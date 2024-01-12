@@ -31,6 +31,7 @@ function getDB(array){
     for(let i = 0; i < array.length; i++){
         dBOnly.push(array[i].value);
     }
+    dBOnly.reverse();
     return dBOnly;
 }
 
@@ -39,6 +40,7 @@ function getTime(array){
     for(let i = 0; i < array.length; i++){
         timeOnly.push(array[i].createdAt);
     }
+    timeOnly.reverse();
     return timeOnly;
 }
 
@@ -48,11 +50,33 @@ function getTime(array){
 function dbGraph(dBData, dBTime){
 
     var threshold = document.getElementById('threshold').value;
-    var thresholdLine = Array(45).fill(threshold);
+    var thresholdLine = Array(parseInt(document.getElementById('timespan').value)).fill(threshold);
 
     const layout = {
-        yaxis: { title: 'Dezibel in db(A)'}, // range: [0, 80] to force set the axis
-        xaxis: { title: 'Zeit'}
+        yaxis: { title: 'Dezibel in db(A)'}, // range: [0, 80] to set the axis scale undinamically
+        xaxis: {
+            title: 'Zeit',
+            // Buttons for changing the size of the graph (15, 30, 45min), 45 being default 
+            autorange: true,
+            range: [dBTime[0], dBTime[parseInt(document.getElementById('timespan').value)-1]],
+            rangeselector: {buttons: [
+                {
+                  count: 15,
+                  label: '15m',
+                  step: 'minute',
+                  stepmode: 'backward'
+                },
+                {
+                  count: 30,
+                  label: '30m',
+                  step: 'minute',
+                  stepmode: 'backward'
+                },
+                { step: "all"}
+              ]},
+            rangeslider: {range: [dBTime[0], dBTime[parseInt(document.getElementById('timespan').value)-1]]},
+            type: 'date'
+        }
     }
 
     var trace1 = {
@@ -88,6 +112,3 @@ function calculateAverage(arr) {
   const sum = arr.reduce((acc, val) => acc + val, 0);
   return Math.round(sum / arr.length * 10) / 10;
 }
-
-
-
