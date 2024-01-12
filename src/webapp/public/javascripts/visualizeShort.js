@@ -1,6 +1,6 @@
 "use strict"
 
-
+// inital loading of data  when DOM loaded
 document.addEventListener("DOMContentLoaded", function(){
     const data = localStorage.getItem("leftData");
     if (data) {
@@ -11,7 +11,19 @@ document.addEventListener("DOMContentLoaded", function(){
         console.log("No data found in localStorage");
         window.location.href = '/'
     }
-})
+});
+
+// updating visualization of threshold when value is changed
+document.getElementById('threshold').addEventListener('click', function(){
+    const data = localStorage.getItem("leftData");
+    if (data) {
+        const dataArray = JSON.parse(data);
+        dbGraph(getDB(dataArray), getTime(dataArray));
+    } else {
+        console.log("No data found in localStorage");
+    }
+});
+
 
 // extract time and date from Sensebox Data in seperate Arrays
 function getDB(array){
@@ -35,7 +47,7 @@ function getTime(array){
 // Build plotly graph with Data and Time, also add threshold line
 function dbGraph(dBData, dBTime){
 
-    const threshold = document.getElementById('threshold').value;
+    var threshold = document.getElementById('threshold').value;
     var thresholdLine = Array(45).fill(threshold);
 
     const layout = {
@@ -62,16 +74,20 @@ function dbGraph(dBData, dBTime){
     Plotly.newPlot("chart", [trace1, trace2], layout);
 }
 
+
 // Display the Average and Maxima of the Data
 function showAvgMax(data) {
-  const average = calculateAverage(data);
-  const maximum = Math.max(...data);
-  console.log(data);
-  document.getElementById('average').innerHTML = average;
-  document.getElementById('maximum').innerText = maximum;
+    const maximum = Math.max(...data);
+    const average = calculateAverage(data);
+    document.getElementById('average').innerHTML = average;
+    document.getElementById('maximum').innerText = maximum;
 }
+
 
 function calculateAverage(arr) {
   const sum = arr.reduce((acc, val) => acc + val, 0);
   return Math.round(sum / arr.length * 10) / 10;
 }
+
+
+

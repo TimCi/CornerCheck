@@ -14,7 +14,7 @@ head
     label(for='timespan') Select Timespan:
     input#timespan(type='number' value='45' min='1' max='120')
     label(for='threshold') Set Threshold (dB):
-    input#threshold(type='number' value='55' min='0' max='100')
+    input#threshold(type='number' value='55' min='0' max='100' step='5')
     //- skript einladen
     script(src="/javascripts/visualizeShort.js") 
   #stats
