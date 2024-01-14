@@ -4,8 +4,55 @@
 #include <time.h>
 #include "custom_wifi_init.h"
 #include <Wire.h>
+#include <WiFiClientSecure.h>
 #include <Adafruit_GFX.h>
 #include "Adafruit_LEDBackpack.h"
+
+const char* server = "ingress.opensensemap.org";
+
+const char SENSOR_ID8B7[] PROGMEM = "65a41c9e99aa070008b3eb70";
+const char SENSOR_ID8B6[] PROGMEM = "65a41c9e99aa070008b3eb71";
+const char SENSOR_ID8B5[] PROGMEM = "65a41c9e99aa070008b3eb72";
+
+//define senseBoxID obtained from openSenseMap 
+static const uint8_t NUM_SENSORS = 3;
+const char SENSEBOX_ID[] PROGMEM = "65a41c9e99aa070008b3eb6f";
+
+// Certificate 
+// SHA1 fingerprint is broken. using root SDRG Root X1 valid until 04 Jun 2035
+// 11:04:38 GMT ISRGRootX1.crt
+const char* root_ca =
+    "-----BEGIN CERTIFICATE-----\n"
+    "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\n"
+    "-----END CERTIFICATE-----\n";
 
 // MAC adress
 // uint8_t myAddress[] = {0x4D, 0x61, 0x72, 0x74, 0x69, 0x02};
@@ -20,6 +67,13 @@ typedef struct data
 
 } data;
 
+
+// define structure of datatype measurement 
+typedef struct measurement {
+  const char* sensorId;
+  float value;
+}; 
+
 // struct to store incoming data
 data stationMsg;
 // array to to store the data of each sensor in
@@ -31,14 +85,27 @@ struct timeval tv_now;
 // NTP Server for time synchronization
 const char *ntpServer = "pool.ntp.org";
 
+#define SoundSensorPin 3  // this pin read the analog voltage from the sound level meter
+#define VREF  5.0 // voltage on AREF pin,default:operating voltage
+
+const int measurementInterval = 125; // in ms
 const int receivingInterval = 1000; // in ms
 const int sendingInterval = 60000;  // in ms
 
-unsigned long previousMillis = 0; // last time, the sensor was read
+unsigned long currentMillis = 0;
+unsigned long previousMillis = 0;
+unsigned long previousSecond = 0; // last time, the sensor was read
 float dbaSum = 0;                 // Sum of the dBA-values per sendingInterval
 float dbaMax = 0;                 // Max dBA-Value per sendingInterval
 int readingCount = 0;             // Count readings per sendingInterval
 int sendingCounter = 1;
+int averageDbaValueM10 = 0;
+
+int arraycounter = 0;
+float allValues[60][3];
+float transmitter00Values[60];
+float transmitter01Values[60];
+float receiver02Values[60];
 
 void onMessageReceived(const uint8_t *macAddr, const uint8_t *incomingData, int len)
 {
@@ -49,16 +116,107 @@ void onMessageReceived(const uint8_t *macAddr, const uint8_t *incomingData, int 
   sensors[macAddr[5]].latency = (seconds - stationMsg.sending_time);
 }
 
+// define array for measurements with beforehand defined datatype 
+char buffer[750];  // might be too short for many phenomenons
+measurement measurements[NUM_SENSORS];
+uint8_t num_measurements = 0;
+const int lengthMultiplikator = 35;
+
+// function to add measurement to measurements array 
+void addMeasurement(const char* sensorId, float value) {
+  measurements[num_measurements].sensorId = sensorId;
+  measurements[num_measurements].value = value;
+  num_measurements++;
+}
+// function to add measurements to the client 
+void writeMeasurementsToClient() {
+  // iterate throug the measurements array
+  for (uint8_t i = 0; i < num_measurements; i++) {
+    sprintf_P(buffer, PSTR("%s,%9.2f\n"), measurements[i].sensorId,
+              measurements[i].value);
+    // transmit buffer to client
+    client.print(buffer);
+    Serial.print(buffer);
+  }
+  // reset num_measurements
+  num_measurements = 0;
+} 
+
+void submitValues() {
+  // check if still connected
+  while (WiFi.status() != WL_CONNECTED) {
+    Serial.println("Connection to WiFi lost. Reconnecting.");
+    WiFi.disconnect();
+    WiFi.reconnect();
+    delay(5000);  // wait 5s
+  }
+  if (client.connected()) {
+    client.stop();
+  }
+  bool connected = false;
+  for (uint8_t timeout = 2; timeout != 0; timeout--) {
+    Serial.println(F("\nconnecting..."));
+    connected = client.connect(server, 443);
+    if (connected == true) {
+      // construct the HTTP POST request:
+      sprintf_P(buffer,
+                PSTR("POST /boxes/%s/data HTTP/1.1\nAuthorization: "
+                     "80d04ba62692e411cbb5c89e50e768a7e380f431c38c3406c4c38268bf69a293" // insert access token obtained from OpenSenseMap 
+                     "\nHost: %s\nContent-Type: "
+                     "text/csv\nConnection: close\nContent-Length: %i\n\n"),
+                SENSEBOX_ID, server,
+                (num_measurements * lengthMultiplikator) - 1);
+      // send the HTTP POST request:
+      Serial.print(buffer);
+      client.print(buffer);
+      // send measurements
+      writeMeasurementsToClient();
+      // send empty line to end the request
+      client.println();
+
+      // read server answer
+      while (client.connected()) {
+        String line = client.readStringUntil('\n');
+        if (line == "\r") {
+          Serial.println("headers received");
+          break;
+        }
+      }
+
+      // read them and print incoming bytes:
+      while (client.available()) {
+        char c = client.read();
+        Serial.write(c);
+      }
+      Serial.println();
+      client.stop();
+
+      num_measurements = 0;
+      break;
+    }
+  }
+}
+
+
 Adafruit_BicolorMatrix matrix = Adafruit_BicolorMatrix();
 
 void setup()
 {
 
   Serial.begin(115200);
+  delay(3000);
+
+  analogReadResolution(13);
+
+  srand(1);
+
 
   // estatblish wifi connection
-  initUniWiFi("uni-ms");
-  // initHomeWifi(""); // for testing
+  //initUniWiFi("uni-ms");
+  initHomeWifi("MagentaWLAN-CCKB"); // for testing
+  Serial.println(WiFi.status());
+
+  client.setCACert(root_ca);
 
   Serial.println("synchronizing NTP Server");
   // time server synchronization
@@ -120,11 +278,29 @@ static const uint8_t PROGMEM
          B01000010,
          B00111100};
 
+
+
 void loop()
 {
   unsigned long currentMillis = millis(); // current time in ms
+
+  if (currentMillis - previousMillis >= measurementInterval) 
+  {
+    float voltageValue,dbaValue;
+    voltageValue = analogReadMilliVolts(SoundSensorPin) / 1000.0; // measure Voltage of Sensor
+    dbaValue = voltageValue * 50.0;  //convert voltage to decibel value
+    //print measurements for testing:
+    //Serial.print(dbaValue,1);
+    //Serial.println(" dBA");
+
+    // update global variables:
+    dbaSum += pow(10,(dbaValue / 10.0));
+    readingCount++;
+    previousMillis = currentMillis;
+  }  
+
   // check if receivingInterval expired
-  if (currentMillis - previousMillis >= receivingInterval)
+  if (currentMillis - previousSecond >= receivingInterval)
   {
     // fetch current time
     // Serial.print("Current seconds since 01.01.1970 ");
@@ -132,13 +308,40 @@ void loop()
     // int64_t seconds = (int64_t)tv_now.tv_sec;
     // Serial.print(seconds);
     // Serial.print("\n");
+    
+    // Calculate average DBA-Value and cast into int for efficient communication
+    // ATTENTION: For better accuracy the value is multiplicated by 10 before the cast
+    averageDbaValueM10 = int(10 * 10 * log10(dbaSum / readingCount));
+
+    //Serial.println("Average dBA-Value in last " + String(sendingInterval) + " ms: " + String(averageDbaValueM10));
+
+    if (averageDbaValueM10 < 500)
+    {
+      matrix.clear();
+      matrix.drawBitmap(0, 0, smile_bmp, 8, 8, LED_GREEN);
+      matrix.writeDisplay();
+    }
+    else if (averageDbaValueM10 < 600) // 5 dBA lower than the 45dBA threshold
+    {
+      matrix.clear();
+      matrix.drawBitmap(0, 0, neutral_bmp, 8, 8, LED_YELLOW);
+      matrix.writeDisplay();
+    }
+    else
+    {
+      matrix.clear();
+      matrix.drawBitmap(0, 0, frown_bmp, 8, 8, LED_RED);
+      matrix.writeDisplay();
+    }
+
+
 
     float secondValues[3];
     secondValues[0] = 0;
     secondValues[1] = 0;
-    secondValues[2] = 0;
+    secondValues[2] = averageDbaValueM10/10;
 
-    for (int i = 0; i < 3; i++)
+    for (int i = 0; i < 2; i++)
     {
       // Change dBA*10 ints to normal dBA floats
       secondValues[i] = sensors[i].decibel / 10.0;
@@ -152,59 +355,38 @@ void loop()
       Serial.println();
     }
 
-    // calculate max_dBA per receivingInterval
-    float max_dBA = 0;
-    if (secondValues[0] >= secondValues[1])
-    {
-      if (secondValues[0] >= secondValues[2])
-      {
-        max_dBA = secondValues[0];
-      }
-      else
-      {
-        max_dBA = secondValues[2];
-      }
-    }
-    else
-    {
-      if (secondValues[1] >= secondValues[2])
-      {
-        max_dBA = secondValues[1];
-      }
-      else
-      {
-        max_dBA = secondValues[2];
-      }
-    }
+    Serial.print("Sensor ");
+    Serial.print("Receiver");
+    Serial.println(":");
+    Serial.print("Decibel [dB]: ");
+    Serial.println(secondValues[2]);
+    Serial.print("Latency [s]: ");
+    Serial.println(0);
+    Serial.println();
 
-    // TODO: visualize max_dBA
-    if (max_dBA < 30)
-    {
-      matrix.clear();
-      matrix.drawBitmap(0, 0, smile_bmp, 8, 8, LED_GREEN);
-      matrix.writeDisplay();
-    };
-    else if (max_dBA < 40) // 5 dBA lower than the 45dBA threshold
-    {
-      matrix.clear();
-      matrix.drawBitmap(0, 0, neutral_bmp, 8, 8, LED_YELLOW);
-      matrix.writeDisplay();
-    }
-    else
-    {
-      matrix.clear();
-      matrix.drawBitmap(0, 0, frown_bmp, 8, 8, LED_RED);
-      matrix.writeDisplay();
-    }
+   
 
-    // update global variables:
-    if (max_dBA > dbaMax)
-    {
-      dbaMax = max_dBA;
-    }
-    dbaSum += pow(10, (secondValues[0] / 10.0)) + pow(10, (secondValues[1] / 10.0)) + pow(10, (secondValues[2] / 10.0));
-    readingCount++;
-    previousMillis = currentMillis;
+      if (arraycounter < 60){
+        for(int i=0; i < 3; i++){
+          allValues[arraycounter][i] = secondValues[i];
+      }
+        transmitter00Values[arraycounter] = allValues[arraycounter][0];
+        transmitter01Values[arraycounter] = allValues[arraycounter][1];
+        receiver02Values[arraycounter] = allValues[arraycounter][2];
+        /*addMeasurement(SENSOR_ID8B7, transmitter00Values[arraycounter]);
+        addMeasurement(SENSOR_ID8B6, transmitter01Values[arraycounter]);
+        addMeasurement(SENSOR_ID8B5, receiver02Values[arraycounter]);*/
+        Serial.println(allValues[arraycounter][0]);
+        Serial.println(allValues[arraycounter][1]);
+        Serial.println(allValues[arraycounter][2]);
+        arraycounter++;
+      }  else {
+          arraycounter = 0;
+        }
+
+    dbaSum=0;
+    readingCount=0;
+    previousSecond = currentMillis;
   }
 
   // check if sendingInterval expired
@@ -214,14 +396,13 @@ void loop()
     // ATTENTION: For better accuracy the value is multiplicated by 10 before the cast
     int averageDbaValueM10 = int(10 * 10 * log10(dbaSum / (readingCount * 3)));
     Serial.println("Average dBA-Value in last " + String(sendingInterval) + " ms: " + String(averageDbaValueM10));
-    int maxDbaValueM10 = int(dbaMax * 10);
-    Serial.println("Max dBA-Value in last " + String(sendingInterval) + " ms: " + String(maxDbaValueM10));
-    // TODO: send maximum and average every min for reporting to opensensemap-cloud
 
+    Serial.println("start upload");
+    
+    
     // update global variables:
     sendingCounter++;
     dbaSum = 0;
-    dbaMax = 0;
     readingCount = 0;
   }
 }

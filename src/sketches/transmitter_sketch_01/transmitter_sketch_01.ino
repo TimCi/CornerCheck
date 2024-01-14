@@ -4,6 +4,8 @@
 #include <WiFi.h>
 #include <stdlib.h>
 #include "custom_wifi_init.h"
+#include <Adafruit_GFX.h>
+#include "Adafruit_LEDBackpack.h"
 
 // MAC adresses
 //uint8_t receiverAddress[] = {0x4D, 0x61, 0x72, 0x74, 0x69, 0x02};
@@ -50,6 +52,7 @@ void messageSent(const uint8_t *macAddr, esp_now_send_status_t status) {
   }
 }
 
+Adafruit_BicolorMatrix matrix = Adafruit_BicolorMatrix();
 
 void setup(){
   Serial.begin(115200);
@@ -89,7 +92,8 @@ void setup(){
     return;
   }
   
-  esp_now_register_send_cb(messageSent);   
+  esp_now_register_send_cb(messageSent);
+  matrix.begin(0x70);
 
   // set options for connection to peer device
   memcpy(peerInfo.peer_addr, receiverAddress, 6); // deep-copy cause of array immutability
@@ -103,6 +107,36 @@ void setup(){
   }
 }
  
+
+static const uint8_t PROGMEM
+    smile_bmp[] =
+        {B00111100,
+         B01000010,
+         B10100101,
+         B10000001,
+         B10100101,
+         B10011001,
+         B01000010,
+         B00111100},
+    neutral_bmp[] =
+        {B00111100,
+         B01000010,
+         B10100101,
+         B10000001,
+         B10111101,
+         B10000001,
+         B01000010,
+         B00111100},
+    frown_bmp[] =
+        {B00111100,
+         B01000010,
+         B10100101,
+         B10000001,
+         B10111101,
+         B10100101,
+         B01000010,
+         B00111100};
+
 void loop(){
   unsigned long currentMillis = millis(); // current time in ms
   // check if measurementInterval expired
@@ -146,6 +180,25 @@ void loop(){
     Serial.println(myMessage.decibel);
     Serial.print("Sending time [s sind 01.01.1970]: ");
     Serial.println(myMessage.sending_time);
+
+    if (averageDbaValueM10 < 500)
+    {
+      matrix.clear();
+      matrix.drawBitmap(0, 0, smile_bmp, 8, 8, LED_GREEN);
+      matrix.writeDisplay();
+    };
+    else if (averageDbaValueM10 < 600) // 5 dBA lower than the 45dBA threshold
+    {
+      matrix.clear();
+      matrix.drawBitmap(0, 0, neutral_bmp, 8, 8, LED_YELLOW);
+      matrix.writeDisplay();
+    }
+    else
+    {
+      matrix.clear();
+      matrix.drawBitmap(0, 0, frown_bmp, 8, 8, LED_RED);
+      matrix.writeDisplay();
+    }
 
     sendingCounter++;
     dbaSum=0;
