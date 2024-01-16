@@ -26,6 +26,7 @@ document.getElementById('threshold').addEventListener('click', function(){
 
 
 // extract time and date from Sensebox Data in seperate Arrays
+// reverse arrays, so that the latest measurement is on the end of the array and not at the start (on the rigth of the graph instead of the left)
 function getDB(array){
     let dBOnly = [];
     for(let i = 0; i < array.length; i++){
@@ -46,11 +47,11 @@ function getTime(array){
 
 
 
-// Build plotly graph with Data and Time, also add threshold line
+// Build inital plotly graph with Data and Time, also add threshold line
 function dbGraph(dBData, dBTime){
 
     var threshold = document.getElementById('threshold').value;
-    var thresholdLine = Array(parseInt(document.getElementById('timespan').value)).fill(threshold);
+    var thresholdLine = Array(45).fill(threshold);
 
     const layout = {
         yaxis: { title: 'Dezibel in db(A)'}, // range: [0, 80] to set the axis scale undinamically
@@ -58,7 +59,7 @@ function dbGraph(dBData, dBTime){
             title: 'Zeit',
             // Buttons for changing the size of the graph (15, 30, 45min), 45 being default 
             autorange: true,
-            range: [dBTime[0], dBTime[parseInt(document.getElementById('timespan').value)-1]],
+            range: [dBTime[0], dBTime[44]],
             rangeselector: {buttons: [
                 {
                   count: 15,
@@ -74,8 +75,9 @@ function dbGraph(dBData, dBTime){
                 },
                 { step: "all"}
               ]},
-            rangeslider: {range: [dBTime[0], dBTime[parseInt(document.getElementById('timespan').value)-1]]},
-            type: 'date'
+            //rangeslider beneath the graph. I dont know if it looks good, have to decide with the group (My opinion: Not that useful because we only use 45 minute data anyways)
+            // rangeslider: {range: [dBTime[0], dBTime[parseInt(document.getElementById('timespan').value)-1]]},
+            // type: 'date'
         }
     }
 
