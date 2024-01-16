@@ -2,11 +2,15 @@
 
 // inital loading of data  when DOM loaded
 document.addEventListener("DOMContentLoaded", function(){
-    const data = localStorage.getItem("leftData");
-    if (data) {
-        const dataArray = JSON.parse(data);
-        dbGraph(getDB(dataArray), getTime(dataArray));
-        showAvgMax(getDB(dataArray));
+    const leftData = localStorage.getItem("leftData");
+    const midData = localStorage.getItem("midData");
+    const rightData = localStorage.getItem("rightData");
+    if (leftData && midData && rightData) {
+        const leftDataArray = JSON.parse(leftData);
+        const midDataArray = JSON.parse(midData);
+        const rightDataArray = JSON.parse(rightData);
+        dbGraph(getDB(leftDataArray), getDB(midDataArray), getDB(rightDataArray), getTime(leftDataArray));
+        showAvgMax(getDB(leftDataArray, midDataArray, rightDataArray));
     } else {
         console.log("No data found in localStorage");
         window.location.href = '/'
@@ -15,10 +19,14 @@ document.addEventListener("DOMContentLoaded", function(){
 
 // updating visualization of threshold when value is changed
 document.getElementById('threshold').addEventListener('click', function(){
-    const data = localStorage.getItem("leftData");
-    if (data) {
-        const dataArray = JSON.parse(data);
-        dbGraph(getDB(dataArray), getTime(dataArray));
+    const leftData = localStorage.getItem("leftData");
+    const midData = localStorage.getItem("midData");
+    const rightData = localStorage.getItem("rightData");
+    if (leftData && midData && rightData) {
+        const leftDataArray = JSON.parse(leftData);
+        const midDataArray = JSON.parse(midData);
+        const rightDataArray = JSON.parse(rightData);
+        dbGraph(getDB(leftDataArray), getDB(midDataArray), getDB(rightDataArray), getTime(leftDataArray));
     } else {
         console.log("No data found in localStorage");
     }
@@ -48,7 +56,7 @@ function getTime(array){
 
 
 // Build inital plotly graph with Data and Time, also add threshold line
-function dbGraph(dBData, dBTime){
+function dbGraph(dBRightData, dBMidData, dBLeftData, dBTime){
 
     var threshold = document.getElementById('threshold').value;
     var thresholdLine = Array(45).fill(threshold);
@@ -75,41 +83,55 @@ function dbGraph(dBData, dBTime){
                 },
                 { step: "all"}
               ]},
-            //rangeslider beneath the graph. I dont know if it looks good, have to decide with the group (My opinion: Not that useful because we only use 45 minute data anyways)
+            // rangeslider beneath the graph. I dont know if it looks good, have to decide with the group (My opinion: Not that useful because we only use 45 minute data anyways)
             // rangeslider: {range: [dBTime[0], dBTime[parseInt(document.getElementById('timespan').value)-1]]},
             // type: 'date'
         }
     }
 
-    var trace1 = {
+    var leftSensorTrace = {
         x: dBTime,
-        y: dBData,
-        name: "dB(A",
+        y: dBLeftData,
+        name: "linker Sensor",
         type: 'scatter'
     }
 
-    var trace2 = {
+    var midSensorTrace = {
+        x: dBTime,
+        y: dBMidData,
+        name: "mittiger Sensor",
+        type: 'scatter'
+    }
+
+    var rightSensorTrace = {
+        x: dBTime,
+        y: dBRightData,
+        name: "rechter Sensor",
+        type: 'scatter'
+    }
+
+    var thresholdTrace = {
         x: dBTime,
         y: thresholdLine,
-        name: 'Threshold',
+        name: 'Grenzwert',
         type: 'scatter',
         line: {dash: 'dash'}
     } 
 
     Plotly.purge("chart");
-    Plotly.newPlot("chart", [trace1, trace2], layout);
+    Plotly.newPlot("chart", [leftSensorTrace, midSensorTrace, rightSensorTrace, thresholdTrace], layout);
 }
 
 
 // Display the Average and Maxima of the Data
-function showAvgMax(data) {
-    const maximum = Math.max(...data);
-    const average = calculateAverage(data);
+function showAvgMax(data1, data2, data3) {
+    const maximum = Math.max(...data1);
+    const average = calculateAverage(data1);
     document.getElementById('average').innerHTML = average;
     document.getElementById('maximum').innerText = maximum;
 }
 
-
+// noch an logarithmus-skala anpassen
 function calculateAverage(arr) {
   const sum = arr.reduce((acc, val) => acc + val, 0);
   return Math.round(sum / arr.length * 10) / 10;

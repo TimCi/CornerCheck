@@ -11,18 +11,18 @@ head
   #chart
   
   div
-    label(for='threshold') Set Threshold (dB):
+    label(for='threshold') Grenzwert in dB(A):
     input#threshold(type='number' value='55' min='0' max='100' step='5')
     //- skript einladen
     script(src="/javascripts/visualizeShort.js") 
   #stats
     p
-      |Average Decibles: 
+      |Durchschnittliche Dezibel: 
       span#average 0
       |  dB
 
     p
-      | Maximum Decibels: 
+      |Maximale Dezibel: 
       span#maximum 0
       |  dB
     p#warning
