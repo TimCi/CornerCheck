@@ -3,9 +3,7 @@
 async function readTextareas() 
 {
     let nowTimestamp = Date.now();
-    console.log(nowTimestamp);
     let nowDate = new Date(nowTimestamp);
-    console.log(nowDate);
 
     const sensebox = document.getElementById(`sensebox`).value;
     const leftSensor = document.getElementById(`leftSensor`).value;
@@ -23,7 +21,6 @@ async function readTextareas()
     const midURL = "https://api.opensensemap.org/boxes/" + sensebox + "/data/" + midSensor + "?from-date=" + fortyFiveMinutesAgoDate.toISOString() + "&to-date=" + nowDate.toISOString() + "&download=false&format=json";
     const rightURL = "https://api.opensensemap.org/boxes/" + sensebox + "/data/" + rightSensor + "?from-date=" + fortyFiveMinutesAgoDate.toISOString() + "&to-date=" + nowDate.toISOString() + "&download=false&format=json";
     
-    console.log(leftURL);
     const boxResponse = await fetch (boxURL);
     const leftResponse = await fetch (leftURL);
     const midResponse = await fetch (midURL);
@@ -51,13 +48,11 @@ async function readTextareas()
         let midData = await midResponse.json();
         let rightData = await rightResponse.json();
 
-        //console.log(leftData)
-
         localStorage.setItem("leftData", JSON.stringify(leftData));
         localStorage.setItem("midData", JSON.stringify(midData));
         localStorage.setItem("rightData", JSON.stringify(rightData));
+        return {sensebox, leftSensor, midSensor, rightSensor}
     }
-      
 }
 
 
@@ -111,8 +106,6 @@ async function readTextareasWeekly(){
         let midData = await midResponse.json();
         let rightData = await rightResponse.json();
 
-        //console.log(leftData)
-
         localStorage.setItem("leftDataWeeklyy", JSON.stringify(leftData));
         localStorage.setItem("midDataWeekly", JSON.stringify(midData));
         localStorage.setItem("rightDataWeekly", JSON.stringify(rightData));
@@ -121,9 +114,9 @@ async function readTextareasWeekly(){
   
 document.addEventListener('DOMContentLoaded', function () 
 {
-    document.getElementById('live').addEventListener('click', function() {
-        readTextareas();
-        window.location.href = '/short_vis'
+    document.getElementById('live').addEventListener('click', async function() {
+        let  {sensebox, leftSensor, midSensor, rightSensor} = await readTextareas();
+        window.location.href = '/short_vis' + '?sensebox=' + encodeURIComponent(sensebox) + '&leftSensor=' + encodeURIComponent(leftSensor) + '&midSensor=' + encodeURIComponent(midSensor) + '&rightSensor=' + encodeURIComponent(rightSensor);
     });
 
     document.getElementById('weekly').addEventListener('click', function(){

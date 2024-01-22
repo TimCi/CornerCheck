@@ -1,20 +1,19 @@
 "use strict"
 
 // inital loading of data  when DOM loaded
-document.addEventListener("DOMContentLoaded", function(){
-    const leftData = localStorage.getItem("leftData");
-    const midData = localStorage.getItem("midData");
-    const rightData = localStorage.getItem("rightData");
-    if (leftData && midData && rightData) {
-        const leftDataArray = JSON.parse(leftData);
-        const midDataArray = JSON.parse(midData);
-        const rightDataArray = JSON.parse(rightData);
-        dbGraph(getDB(leftDataArray), getDB(midDataArray), getDB(rightDataArray), getTime(leftDataArray));
-        showAvgMax(getDB(leftDataArray, midDataArray, rightDataArray));
-    } else {
-        console.log("No data found in localStorage");
-        window.location.href = '/'
-    }
+document.addEventListener("DOMContentLoaded", function()
+{
+    // Create a URLSearchParams object with the query parameters (IDs)
+    let urlParams = new URLSearchParams(window.location.search);
+
+    // Get a specific ID by name
+    let sensebox = urlParams.get('sensebox');
+    let leftSensor = urlParams.get('leftSensor');
+    let midSensor = urlParams.get('midSensor');
+    let rightSensor = urlParams.get('rightSensor');
+
+    updateLiveValues(sensebox, leftSensor, midSensor, rightSensor);
+    setInterval(function() {updateLiveValues(sensebox, leftSensor, midSensor, rightSensor)}, 60000)
 });
 
 // updating visualization of threshold when value is changed
@@ -131,8 +130,42 @@ function showAvgMax(data1, data2, data3) {
     document.getElementById('maximum').innerText = maximum;
 }
 
-// noch an logarithmus-skala anpassen
+// calc DB-Average
 function calculateAverage(arr) {
   const sum = arr.reduce((acc, val) => acc + (Math.pow(10,(val/10))), 0);
   return Math.round(Math.log10(sum / arr.length) * 100) / 10;
+}
+
+// update Live-Values every 60 sec
+async function updateLiveValues(sensebox, leftSensor, midSensor, rightSensor) 
+{
+    let nowTimestamp = Date.now();
+    let nowDate = new Date(nowTimestamp);
+
+    let fortyFiveMinutesAgoTimestamp = nowTimestamp - (45 * 60 * 1000);
+    let fortyFiveMinutesAgoDate = new Date(fortyFiveMinutesAgoTimestamp);
+
+    const baseURL = "https://api.opensensemap.org/boxes/" + sensebox + "/data/"
+    const leftURL = baseURL + leftSensor + "?from-date=" + fortyFiveMinutesAgoDate.toISOString() + "&to-date=" + nowDate.toISOString() + "&download=false&format=json";
+    const midURL = baseURL + midSensor + "?from-date=" + fortyFiveMinutesAgoDate.toISOString() + "&to-date=" + nowDate.toISOString() + "&download=false&format=json";
+    const rightURL = baseURL + rightSensor + "?from-date=" + fortyFiveMinutesAgoDate.toISOString() + "&to-date=" + nowDate.toISOString() + "&download=false&format=json";
+
+    const leftResponse = await fetch (leftURL);
+    const midResponse = await fetch (midURL);
+    const rightResponse = await fetch (rightURL);
+
+    let leftData = await leftResponse.json();
+    let midData = await midResponse.json();
+    let rightData = await rightResponse.json();
+
+    if (leftData && midData && rightData) {
+        localStorage.setItem("leftData", JSON.stringify(leftData));
+        localStorage.setItem("midData", JSON.stringify(midData));
+        localStorage.setItem("rightData", JSON.stringify(rightData));
+        dbGraph(getDB(leftData), getDB(midData), getDB(rightData), getTime(leftData));
+        showAvgMax(getDB(leftData, midData, rightData));
+    } else {
+        console.log("No data found in localStorage");
+        window.location.href = '/'
+    }
 }
