@@ -5,14 +5,26 @@ block links
 
 block content
   h1= title
-  p Willkommen in der Webapp vom #{title}! 
-  p Um die Lautstärkedaten deiner CornerCheck-Station einzusehen und zu analysieren, gib bitte die sensebox-ID deiner Station an:
-  textarea(id=`sensebox`, placeholder=`sensebox-ID`)
-  textarea(id=`leftSensor`, placeholder=`leftSensor-ID`)
-  textarea(id=`midSensor`, placeholder=`midSensor-ID`)
-  textarea(id=`rightSensor`, placeholder=`rightSensor-ID`)
-
-  button(id='confirm') Confirm
+  div
+    p Willkommen in der Webapp vom #{title}! 
+    p Um die Lautstärkedaten deiner CornerCheck-Station einzusehen und zu analysieren, gib bitte die sensebox-ID deiner Station an:
+  .textfield
+    textarea(id=`sensebox`, placeholder=`sensebox-ID`)
+  .textfield
+    textarea(id=`leftSensor`, placeholder=`leftSensor-ID`)
+  .textfield
+    textarea(id=`midSensor`, placeholder=`midSensor-ID`)
+  .textfield
+    textarea(id=`rightSensor`, placeholder=`rightSensor-ID`)
+  .buttons
+    div
+      button(id='live') Live Anzeige
+    div
+      //- (action="/action_page.php")
+      p Wähle außerdem einen Tag um den Tagesbericht abzufragen:
+      form  
+        input#dateSelector(type='date' name='dateSelector')
+      button(id='weekly') Tagesberichte
 
 
 
