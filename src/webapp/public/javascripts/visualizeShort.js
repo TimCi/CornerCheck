@@ -17,17 +17,23 @@ document.addEventListener("DOMContentLoaded", function()
 });
 
 // updating visualization of threshold when value is changed
-document.getElementById('threshold').addEventListener('click', function(){
-    const leftData = localStorage.getItem("leftData");
-    const midData = localStorage.getItem("midData");
-    const rightData = localStorage.getItem("rightData");
-    if (leftData && midData && rightData) {
-        const leftDataArray = JSON.parse(leftData);
-        const midDataArray = JSON.parse(midData);
-        const rightDataArray = JSON.parse(rightData);
-        dbGraph(getDB(leftDataArray), getDB(midDataArray), getDB(rightDataArray), getTime(leftDataArray));
+document.getElementById('threshold').addEventListener('input', function(event){
+    let inputValue = parseFloat(event.target.value);
+    // Check if the input is a number and within the specified range
+    if (!isNaN(inputValue) && inputValue >= 0 && inputValue <= 100) {
+        const leftData = localStorage.getItem("leftData");
+        const midData = localStorage.getItem("midData");
+        const rightData = localStorage.getItem("rightData");
+        if (leftData && midData && rightData) {
+            const leftDataArray = JSON.parse(leftData);
+            const midDataArray = JSON.parse(midData);
+            const rightDataArray = JSON.parse(rightData);
+            dbGraph(getDB(leftDataArray), getDB(midDataArray), getDB(rightDataArray), getTime(leftDataArray));
+        } else {
+            console.log("No data found in localStorage");
+        }
     } else {
-        console.log("No data found in localStorage");
+        console.log('Invalid input. Please enter a number between 0 and 100.');
     }
 });
 
