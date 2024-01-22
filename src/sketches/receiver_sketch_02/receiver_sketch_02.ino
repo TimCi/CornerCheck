@@ -7,15 +7,18 @@
 #include <WiFiClientSecure.h>
 #include <Adafruit_GFX.h>
 #include "Adafruit_LEDBackpack.h"
+#include "esp_wpa2.h"  
 
-const char* server = "ingress.opensensemap.org";
+char server[] = "ingress.opensensemap.org";
+
+WiFiClientSecure client;
 
 const char SENSOR_ID8B7[] PROGMEM = "65a41c9e99aa070008b3eb70";
 const char SENSOR_ID8B6[] PROGMEM = "65a41c9e99aa070008b3eb71";
 const char SENSOR_ID8B5[] PROGMEM = "65a41c9e99aa070008b3eb72";
 
 //define senseBoxID obtained from openSenseMap 
-static const uint8_t NUM_SENSORS = 3;
+static const uint8_t NUM_SENSORS = 200;
 const char SENSEBOX_ID[] PROGMEM = "65a41c9e99aa070008b3eb6f";
 
 // Certificate 
@@ -100,12 +103,8 @@ float dbaMax = 0;                 // Max dBA-Value per sendingInterval
 int readingCount = 0;             // Count readings per sendingInterval
 int sendingCounter = 1;
 int averageDbaValueM10 = 0;
+bool connected = false;
 
-int arraycounter = 0;
-float allValues[60][3];
-float transmitter00Values[60];
-float transmitter01Values[60];
-float receiver02Values[60];
 
 void onMessageReceived(const uint8_t *macAddr, const uint8_t *incomingData, int len)
 {
@@ -144,21 +143,18 @@ void writeMeasurementsToClient() {
 
 void submitValues() {
   // check if still connected
+  Serial.println(WiFi.status());
   while (WiFi.status() != WL_CONNECTED) {
     Serial.println("Connection to WiFi lost. Reconnecting.");
-    WiFi.disconnect();
-    WiFi.reconnect();
-    delay(5000);  // wait 5s
+    initHomeWifi("MagentaWLAN-CCKB");
   }
-  if (client.connected()) {
-    client.stop();
-  }
-  bool connected = false;
+
   for (uint8_t timeout = 2; timeout != 0; timeout--) {
     Serial.println(F("\nconnecting..."));
     connected = client.connect(server, 443);
     if (connected == true) {
       // construct the HTTP POST request:
+      Serial.println("OSeM connected");
       sprintf_P(buffer,
                 PSTR("POST /boxes/%s/data HTTP/1.1\nAuthorization: "
                      "80d04ba62692e411cbb5c89e50e768a7e380f431c38c3406c4c38268bf69a293" // insert access token obtained from OpenSenseMap 
@@ -189,16 +185,17 @@ void submitValues() {
         Serial.write(c);
       }
       Serial.println();
-      client.stop();
 
       num_measurements = 0;
       break;
     }
+    delay(1000);
   }
 }
 
 
-Adafruit_BicolorMatrix matrix = Adafruit_BicolorMatrix();
+//Adafruit_BicolorMatrix matrix = Adafruit_BicolorMatrix();
+Adafruit_8x8matrix matrix = Adafruit_8x8matrix();
 
 void setup()
 {
@@ -282,6 +279,10 @@ static const uint8_t PROGMEM
 
 void loop()
 {
+
+  if(WiFi.status() != WL_CONNECTED) {
+    initHomeWifi("MagentaWLAN-CCKB");
+  }
   unsigned long currentMillis = millis(); // current time in ms
 
   if (currentMillis - previousMillis >= measurementInterval) 
@@ -318,27 +319,30 @@ void loop()
     if (averageDbaValueM10 < 500)
     {
       matrix.clear();
-      matrix.drawBitmap(0, 0, smile_bmp, 8, 8, LED_GREEN);
+      //matrix.drawBitmap(0, 0, smile_bmp, 8, 8, LED_GREEN);
+      matrix.drawBitmap(0, 0, smile_bmp, 8, 8, LED_ON);
       matrix.writeDisplay();
     }
     else if (averageDbaValueM10 < 600) // 5 dBA lower than the 45dBA threshold
     {
       matrix.clear();
-      matrix.drawBitmap(0, 0, neutral_bmp, 8, 8, LED_YELLOW);
+      //matrix.drawBitmap(0, 0, neutral_bmp, 8, 8, LED_YELLOW);
+      matrix.drawBitmap(0, 0, neutral_bmp, 8, 8, LED_ON);
       matrix.writeDisplay();
     }
     else
     {
       matrix.clear();
-      matrix.drawBitmap(0, 0, frown_bmp, 8, 8, LED_RED);
+      //matrix.drawBitmap(0, 0, frown_bmp, 8, 8, LED_RED);
+      matrix.drawBitmap(0, 0, frown_bmp, 8, 8, LED_ON);
       matrix.writeDisplay();
     }
 
 
 
     float secondValues[3];
-    secondValues[0] = 0;
-    secondValues[1] = 0;
+    secondValues[0] = 0.0;
+    secondValues[1] = 0.0;
     secondValues[2] = averageDbaValueM10/10;
 
     for (int i = 0; i < 2; i++)
@@ -364,25 +368,9 @@ void loop()
     Serial.println(0);
     Serial.println();
 
-   
-
-      if (arraycounter < 60){
-        for(int i=0; i < 3; i++){
-          allValues[arraycounter][i] = secondValues[i];
-      }
-        transmitter00Values[arraycounter] = allValues[arraycounter][0];
-        transmitter01Values[arraycounter] = allValues[arraycounter][1];
-        receiver02Values[arraycounter] = allValues[arraycounter][2];
-        /*addMeasurement(SENSOR_ID8B7, transmitter00Values[arraycounter]);
-        addMeasurement(SENSOR_ID8B6, transmitter01Values[arraycounter]);
-        addMeasurement(SENSOR_ID8B5, receiver02Values[arraycounter]);*/
-        Serial.println(allValues[arraycounter][0]);
-        Serial.println(allValues[arraycounter][1]);
-        Serial.println(allValues[arraycounter][2]);
-        arraycounter++;
-      }  else {
-          arraycounter = 0;
-        }
+    addMeasurement(SENSOR_ID8B7, secondValues[0]);
+    addMeasurement(SENSOR_ID8B6, secondValues[1]);
+    addMeasurement(SENSOR_ID8B5, secondValues[2]);
 
     dbaSum=0;
     readingCount=0;
@@ -392,12 +380,14 @@ void loop()
   // check if sendingInterval expired
   if (currentMillis >= sendingInterval * sendingCounter)
   {
+    Serial.println(WiFi.status());
     // Calculate average DBA-Value and cast into int for efficient communication
     // ATTENTION: For better accuracy the value is multiplicated by 10 before the cast
     int averageDbaValueM10 = int(10 * 10 * log10(dbaSum / (readingCount * 3)));
     Serial.println("Average dBA-Value in last " + String(sendingInterval) + " ms: " + String(averageDbaValueM10));
 
     Serial.println("start upload");
+    submitValues();
     
     
     // update global variables:
