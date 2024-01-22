@@ -133,6 +133,6 @@ function showAvgMax(data1, data2, data3) {
 
 // noch an logarithmus-skala anpassen
 function calculateAverage(arr) {
-  const sum = arr.reduce((acc, val) => acc + val, 0);
-  return Math.round(sum / arr.length * 10) / 10;
+  const sum = arr.reduce((acc, val) => acc + (Math.pow(10,(val/10))), 0);
+  return Math.round(Math.log10(sum / arr.length) * 100) / 10;
 }
