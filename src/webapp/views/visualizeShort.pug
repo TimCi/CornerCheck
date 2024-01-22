@@ -18,13 +18,13 @@ head
     //- skript einladen
     script(src="/javascripts/visualizeShort.js") 
   #stats
-    p
-      |Durchschnittliche Dezibel: 
-      span#average 0
-      |  dB
-
-    p
-      |Maximale Dezibel: 
-      span#maximum 0
-      |  dB
+    table#DB-table
+        thead
+          tr
+            th 
+            th linker Sensor 
+            th mittlerer Sensor
+            th rechter Sensor
+            th Gesamt
+        tbody
     p#warning
