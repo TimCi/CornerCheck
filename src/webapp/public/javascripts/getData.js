@@ -64,14 +64,12 @@ async function readTextareasWeekly(){
     const midSensor = document.getElementById(`midSensor`).value;
     const rightSensor = document.getElementById(`rightSensor`).value;
 
-
     const date = document.getElementById("dateSelector").value;
-    const dateBegin = date + "16:00:00 GMT+0100";
+    const dateBegin = date + " 16:00:00 GMT+0100";
     const earlyDate =  new Date(dateBegin);
     
-    const nextDate = new Date (date.getTime() + 86400000);
-    const dateEnd = nextDate + "02:00:00 GMT+0100";
-    const lateDate = new Date (dateEnd); 
+    const nextDate = new Date (new Date(earlyDate).getTime() + calc12h());
+    const lateDate = new Date (nextDate);
 
 
     const boxURL = "https://api.opensensemap.org/boxes/" + sensebox + "/sensors";
@@ -79,6 +77,7 @@ async function readTextareasWeekly(){
     const midURL = "https://api.opensensemap.org/boxes/" + sensebox + "/data/" + midSensor + "?from-date=" + earlyDate.toISOString() + "&to-date=" + lateDate.toISOString() + "&download=false&format=json";
     const rightURL = "https://api.opensensemap.org/boxes/" + sensebox + "/data/" + rightSensor + "?from-date=" + earlyDate.toISOString() + "&to-date=" + lateDate.toISOString() + "&download=false&format=json";
 
+    console.log(leftURL);
     const boxResponse = await fetch (boxURL);
     const leftResponse = await fetch (leftURL);
     const midResponse = await fetch (midURL);
@@ -106,9 +105,12 @@ async function readTextareasWeekly(){
         let midData = await midResponse.json();
         let rightData = await rightResponse.json();
 
-        localStorage.setItem("leftDataWeeklyy", JSON.stringify(leftData));
+        console.log(JSON.stringify(leftData));
+
+        localStorage.setItem("leftDataWeekly", JSON.stringify(leftData));
         localStorage.setItem("midDataWeekly", JSON.stringify(midData));
         localStorage.setItem("rightDataWeekly", JSON.stringify(rightData));
+        return {sensebox, leftSensor, midSensor, rightSensor}
     }
 }
   
