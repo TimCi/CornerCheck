@@ -155,8 +155,8 @@ void submitValues() {
   Serial.println(WiFi.status());
   while (WiFi.status() != WL_CONNECTED) {
     Serial.println("Connection to WiFi lost. Reconnecting.");
-    //initHomeWifi("MagentaWLAN-CCKB");
-    initUniWiFi("uni-ms");
+    initHomeWifi("MagentaWLAN-CCKB");
+    //initUniWiFi("uni-ms");
   }
 
   for (uint8_t timeout = 2; timeout != 0; timeout--) {
@@ -212,6 +212,8 @@ String getTimestamp(String oldDatetime){
 
   return oldDatetime;
 }
+
+/*
 
 #define LED_PIN 3
 #define LED_COUNT 64
@@ -272,7 +274,7 @@ void frownFace () {
     0,1,0,0,0,0,1,0,
     1,0,1,0,0,1,0,1,
     1,0,0,0,0,0,0,1,
-    1,0,0,1,1,0,0,1,
+    1,0,1,1,1,1,0,1,
     1,0,1,0,0,1,0,1,
     0,1,0,0,0,0,1,0,
     0,0,1,1,1,1,0,0,
@@ -288,6 +290,7 @@ void frownFace () {
     col = 0;
     }
 }
+*/
 
 
 void setup()
@@ -302,8 +305,8 @@ void setup()
 
 
   // estatblish wifi connection
-  initUniWiFi("uni-ms");
-  //initHomeWifi("MagentaWLAN-CCKB"); // for testing
+  //initUniWiFi("uni-ms");
+  initHomeWifi("MagentaWLAN-CCKB"); // for testing
 
   client.setCACert(root_ca);
 
@@ -339,9 +342,11 @@ void setup()
   esp_now_register_recv_cb(onMessageReceived);
   //matrix.begin(0x70); // pass in the address
 
+  /*
   strip.begin();           
   strip.show();            
   strip.setBrightness(50); 
+  */
 
   delay(1000);
 
@@ -372,12 +377,12 @@ void loop()
   {
     averageDbaValueM10 = int(10 * 10 * log10(dbaSum / readingCount));
 
-    if (averageDbaValueM10 < 500)
+    /*if (averageDbaValueM10 < 500)
     {
-     /* matrix.clear();
-      //matrix.drawBitmap(0, 0, smile_bmp, 8, 8, LED_GREEN);
+      /*matrix.clear();
+      matrix.drawBitmap(0, 0, smile_bmp, 8, 8, LED_GREEN);
       matrix.drawBitmap(0, 0, smile_bmp, 8, 8, LED_ON);
-      matrix.writeDisplay();*/
+      matrix.writeDisplay();
 	    smileFace();
     }
     else if (averageDbaValueM10 < 600) // 5 dBA lower than the 45dBA threshold
@@ -385,7 +390,7 @@ void loop()
       /*matrix.clear();
       //matrix.drawBitmap(0, 0, neutral_bmp, 8, 8, LED_YELLOW);
       matrix.drawBitmap(0, 0, neutral_bmp, 8, 8, LED_ON);
-      matrix.writeDisplay();*/
+      matrix.writeDisplay();
 	    neutralFace();
     }
     else
@@ -393,15 +398,32 @@ void loop()
       /*matrix.clear();
       //matrix.drawBitmap(0, 0, frown_bmp, 8, 8, LED_RED);
       matrix.drawBitmap(0, 0, frown_bmp, 8, 8, LED_ON);
-      matrix.writeDisplay();*/
+      matrix.writeDisplay();
 	    frownFace();
 	
-    }
+    }*/
+
+    
+      
 
     float secondValues[3];
     secondValues[0] = 0.0;
     secondValues[1] = 0.0;
     secondValues[2] = averageDbaValueM10/10;
+
+      for (int i = 0; i < 2; i++)
+          {
+    // Change dBA*10 ints to normal dBA floats
+      secondValues[i] = sensors[i].decibel / 10.0;
+      Serial.print("Sensor ");
+      Serial.print(i);
+      Serial.println(":");
+      Serial.print("Decibel [dB]: ");
+      Serial.println(secondValues[i]);
+      Serial.print("Latency [s]: ");
+      Serial.println(sensors[i].latency);
+      Serial.println();
+    }
 
     timestamp = getTimestamp(myTZ.dateTime(RFC3339));
     Serial.println(timestamp);
