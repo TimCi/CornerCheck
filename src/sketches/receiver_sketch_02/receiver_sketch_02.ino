@@ -7,11 +7,13 @@
 #include <WiFiClientSecure.h>
 #include <Adafruit_GFX.h>
 #include "Adafruit_LEDBackpack.h"
-#include "esp_wpa2.h"  
+#include "esp_wpa2.h" 
+#include <ezTime.h> 
 
 char server[] = "ingress.opensensemap.org";
 
 WiFiClientSecure client;
+Timezone myTZ;
 
 const char SENSOR_ID8B7[] PROGMEM = "65a41c9e99aa070008b3eb70";
 const char SENSOR_ID8B6[] PROGMEM = "65a41c9e99aa070008b3eb71";
@@ -75,6 +77,7 @@ typedef struct data
 typedef struct measurement {
   const char* sensorId;
   float value;
+  char * createdAt;
 }; 
 
 // struct to store incoming data
@@ -97,42 +100,35 @@ const int sendingInterval = 60000;  // in ms
 
 unsigned long currentMillis = 0;
 unsigned long previousMillis = 0;
-unsigned long previousSecond = 0; // last time, the sensor was read
+unsigned long previousSecond = 0;
+unsigned long setupMillis = 0; // last time, the sensor was read
 float dbaSum = 0;                 // Sum of the dBA-values per sendingInterval
-float dbaMax = 0;                 // Max dBA-Value per sendingInterval
 int readingCount = 0;             // Count readings per sendingInterval
 int sendingCounter = 1;
 int averageDbaValueM10 = 0;
 bool connected = false;
-
-
-void onMessageReceived(const uint8_t *macAddr, const uint8_t *incomingData, int len)
-{
-  memcpy(&stationMsg, incomingData, sizeof(stationMsg));
-  sensors[macAddr[5]].decibel = stationMsg.decibel;
-  gettimeofday(&tv_now, NULL);
-  int64_t seconds = (int64_t)tv_now.tv_sec;
-  sensors[macAddr[5]].latency = (seconds - stationMsg.sending_time);
-}
+String timestamp = "";
+char * timestampchar = "";
 
 // define array for measurements with beforehand defined datatype 
 char buffer[750];  // might be too short for many phenomenons
 measurement measurements[NUM_SENSORS];
 uint8_t num_measurements = 0;
-const int lengthMultiplikator = 35;
+const int lengthMultiplikator = 56;
 
 // function to add measurement to measurements array 
-void addMeasurement(const char* sensorId, float value) {
+void addMeasurement(const char* sensorId, float value, char * createdAt) {
   measurements[num_measurements].sensorId = sensorId;
   measurements[num_measurements].value = value;
+  measurements[num_measurements].createdAt = createdAt;
   num_measurements++;
 }
 // function to add measurements to the client 
 void writeMeasurementsToClient() {
   // iterate throug the measurements array
   for (uint8_t i = 0; i < num_measurements; i++) {
-    sprintf_P(buffer, PSTR("%s,%9.2f\n"), measurements[i].sensorId,
-              measurements[i].value);
+    sprintf_P(buffer, PSTR("%s,%9.2f,%s\n"), measurements[i].sensorId,
+              measurements[i].value, measurements[i].createdAt);
     // transmit buffer to client
     client.print(buffer);
     Serial.print(buffer);
@@ -146,7 +142,8 @@ void submitValues() {
   Serial.println(WiFi.status());
   while (WiFi.status() != WL_CONNECTED) {
     Serial.println("Connection to WiFi lost. Reconnecting.");
-    initHomeWifi("MagentaWLAN-CCKB");
+    //initHomeWifi("MagentaWLAN-CCKB");
+    initUniWiFi("uni-ms");
   }
 
   for (uint8_t timeout = 2; timeout != 0; timeout--) {
@@ -189,13 +186,21 @@ void submitValues() {
       num_measurements = 0;
       break;
     }
-    delay(1000);
   }
 }
 
 
-//Adafruit_BicolorMatrix matrix = Adafruit_BicolorMatrix();
-Adafruit_8x8matrix matrix = Adafruit_8x8matrix();
+String getTimestamp(String oldDatetime){
+  int found = oldDatetime.indexOf("-00:00");
+
+  // Ersetze "-00:00" durch "Z"
+  if (found != -1) {
+    oldDatetime.replace("-00:00", "Z");
+  }
+
+  return oldDatetime;
+}
+
 
 void setup()
 {
@@ -209,9 +214,8 @@ void setup()
 
 
   // estatblish wifi connection
-  //initUniWiFi("uni-ms");
-  initHomeWifi("MagentaWLAN-CCKB"); // for testing
-  Serial.println(WiFi.status());
+  initUniWiFi("uni-ms");
+  //initHomeWifi("MagentaWLAN-CCKB"); // for testing
 
   client.setCACert(root_ca);
 
@@ -221,8 +225,10 @@ void setup()
   configTime(1, 0, ntpServer);
 
   // wait some time to ensure synchronization
-  delay(10000);
-  Serial.println("NTP Server synchronized");
+  delay(5000);
+  Serial.println("NTP Server synchronized"); 
+
+  waitForSync();
 
   WiFi.mode(WIFI_STA);
   Serial.print("Old ESP Board MAC Address:  ");
@@ -232,57 +238,17 @@ void setup()
   Serial.print("New ESP Board MAC Address:  ");
   Serial.println(WiFi.macAddress());
 
-  if (esp_now_init() == ESP_OK)
-  {
-    Serial.println("ESPNow Init success");
-  }
-  else
-  {
-    Serial.println("ESPNow Init fail");
-    return;
-  }
+  delay(2000);
 
-  esp_now_register_recv_cb(onMessageReceived);
-  matrix.begin(0x70); // pass in the address
+  setupMillis = millis();
+  previousMillis = millis();
+  previousSecond = millis();
+
+
 }
-
-static const uint8_t PROGMEM
-    smile_bmp[] =
-        {B00111100,
-         B01000010,
-         B10100101,
-         B10000001,
-         B10100101,
-         B10011001,
-         B01000010,
-         B00111100},
-    neutral_bmp[] =
-        {B00111100,
-         B01000010,
-         B10100101,
-         B10000001,
-         B10111101,
-         B10000001,
-         B01000010,
-         B00111100},
-    frown_bmp[] =
-        {B00111100,
-         B01000010,
-         B10100101,
-         B10000001,
-         B10111101,
-         B10100101,
-         B01000010,
-         B00111100};
-
-
 
 void loop()
 {
-
-  if(WiFi.status() != WL_CONNECTED) {
-    initHomeWifi("MagentaWLAN-CCKB");
-  }
   unsigned long currentMillis = millis(); // current time in ms
 
   if (currentMillis - previousMillis >= measurementInterval) 
@@ -290,9 +256,6 @@ void loop()
     float voltageValue,dbaValue;
     voltageValue = analogReadMilliVolts(SoundSensorPin) / 1000.0; // measure Voltage of Sensor
     dbaValue = voltageValue * 50.0;  //convert voltage to decibel value
-    //print measurements for testing:
-    //Serial.print(dbaValue,1);
-    //Serial.println(" dBA");
 
     // update global variables:
     dbaSum += pow(10,(dbaValue / 10.0));
@@ -303,74 +266,21 @@ void loop()
   // check if receivingInterval expired
   if (currentMillis - previousSecond >= receivingInterval)
   {
-    // fetch current time
-    // Serial.print("Current seconds since 01.01.1970 ");
-    // gettimeofday(&tv_now, NULL);
-    // int64_t seconds = (int64_t)tv_now.tv_sec;
-    // Serial.print(seconds);
-    // Serial.print("\n");
-    
-    // Calculate average DBA-Value and cast into int for efficient communication
-    // ATTENTION: For better accuracy the value is multiplicated by 10 before the cast
     averageDbaValueM10 = int(10 * 10 * log10(dbaSum / readingCount));
-
-    //Serial.println("Average dBA-Value in last " + String(sendingInterval) + " ms: " + String(averageDbaValueM10));
-
-    if (averageDbaValueM10 < 500)
-    {
-      matrix.clear();
-      //matrix.drawBitmap(0, 0, smile_bmp, 8, 8, LED_GREEN);
-      matrix.drawBitmap(0, 0, smile_bmp, 8, 8, LED_ON);
-      matrix.writeDisplay();
-    }
-    else if (averageDbaValueM10 < 600) // 5 dBA lower than the 45dBA threshold
-    {
-      matrix.clear();
-      //matrix.drawBitmap(0, 0, neutral_bmp, 8, 8, LED_YELLOW);
-      matrix.drawBitmap(0, 0, neutral_bmp, 8, 8, LED_ON);
-      matrix.writeDisplay();
-    }
-    else
-    {
-      matrix.clear();
-      //matrix.drawBitmap(0, 0, frown_bmp, 8, 8, LED_RED);
-      matrix.drawBitmap(0, 0, frown_bmp, 8, 8, LED_ON);
-      matrix.writeDisplay();
-    }
-
-
 
     float secondValues[3];
     secondValues[0] = 0.0;
     secondValues[1] = 0.0;
     secondValues[2] = averageDbaValueM10/10;
 
-    for (int i = 0; i < 2; i++)
-    {
-      // Change dBA*10 ints to normal dBA floats
-      secondValues[i] = sensors[i].decibel / 10.0;
-      Serial.print("Sensor ");
-      Serial.print(i);
-      Serial.println(":");
-      Serial.print("Decibel [dB]: ");
-      Serial.println(secondValues[i]);
-      Serial.print("Latency [s]: ");
-      Serial.println(sensors[i].latency);
-      Serial.println();
-    }
+    timestamp = getTimestamp(myTZ.dateTime(RFC3339));
+    Serial.println(timestamp);
+    timestampchar = new char[timestamp.length()+1];
+    strcpy(timestampchar, timestamp.c_str());
 
-    Serial.print("Sensor ");
-    Serial.print("Receiver");
-    Serial.println(":");
-    Serial.print("Decibel [dB]: ");
-    Serial.println(secondValues[2]);
-    Serial.print("Latency [s]: ");
-    Serial.println(0);
-    Serial.println();
-
-    addMeasurement(SENSOR_ID8B7, secondValues[0]);
-    addMeasurement(SENSOR_ID8B6, secondValues[1]);
-    addMeasurement(SENSOR_ID8B5, secondValues[2]);
+    addMeasurement(SENSOR_ID8B7, secondValues[0], timestampchar);
+    addMeasurement(SENSOR_ID8B6, secondValues[1], timestampchar);
+    addMeasurement(SENSOR_ID8B5, secondValues[2], timestampchar);
 
     dbaSum=0;
     readingCount=0;
@@ -378,17 +288,10 @@ void loop()
   }
 
   // check if sendingInterval expired
-  if (currentMillis >= sendingInterval * sendingCounter)
+  if (currentMillis - setupMillis >= sendingInterval * sendingCounter)
   {
-    Serial.println(WiFi.status());
-    // Calculate average DBA-Value and cast into int for efficient communication
-    // ATTENTION: For better accuracy the value is multiplicated by 10 before the cast
-    int averageDbaValueM10 = int(10 * 10 * log10(dbaSum / (readingCount * 3)));
-    Serial.println("Average dBA-Value in last " + String(sendingInterval) + " ms: " + String(averageDbaValueM10));
-
     Serial.println("start upload");
     submitValues();
-    
     
     // update global variables:
     sendingCounter++;

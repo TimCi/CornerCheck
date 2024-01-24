@@ -53,7 +53,7 @@ void messageSent(const uint8_t *macAddr, esp_now_send_status_t status) {
 }
 
 //Adafruit_8x8matrix matrix = Adafruit_8x8matrix();
-Adafruit_BicolorMatrix matrix = Adafruit_BicolorMatrix();
+//Adafruit_BicolorMatrix matrix = Adafruit_BicolorMatrix();
 
 
 void setup(){
@@ -66,8 +66,8 @@ void setup(){
   srand(1);
 
   // estatblish wifi connection
-  initUniWiFi("uni-ms");
-  // initHomeWifi(""); // for testing
+  //initUniWiFi("uni-ms");
+  initHomeWifi("MagentaWLAN-CCKB"); // for testing
 
   Serial.println("synchronizing NTP Server");
   // time server synchronization
@@ -95,7 +95,7 @@ void setup(){
   }
   
   esp_now_register_send_cb(messageSent);
-  matrix.begin(0x70); // pass in the address
+  //matrix.begin(0x70); // pass in the address
 
 
   // set options for connection to peer device
@@ -109,7 +109,7 @@ void setup(){
     return;
   }
 }
-
+/*
 static const uint8_t PROGMEM
     smile_bmp[] =
         {B00111100,
@@ -138,7 +138,7 @@ static const uint8_t PROGMEM
          B10100101,
          B01000010,
          B00111100};
- 
+ */
 void loop(){
   unsigned long currentMillis = millis(); // current time in ms
   // check if measurementInterval expired
@@ -183,6 +183,7 @@ void loop(){
     Serial.print("Sending time [s sind 01.01.1970]: ");
     Serial.println(myMessage.sending_time);
 
+    /*
     if (averageDbaValueM10 < 500)
     {
       matrix.clear();
@@ -204,7 +205,7 @@ void loop(){
       // matrix.drawBitmap(0, 0, frown_bmp, 8, 8, LED_ON);
       matrix.writeDisplay();
     }
-
+    */
     sendingCounter++;
     dbaSum=0;
     readingCount=0;
