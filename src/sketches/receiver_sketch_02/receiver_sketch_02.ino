@@ -8,7 +8,11 @@
 #include <Adafruit_GFX.h>
 #include "Adafruit_LEDBackpack.h"
 #include "esp_wpa2.h" 
-#include <ezTime.h> 
+#include <ezTime.h>
+#include <Adafruit_NeoPixel.h>
+#ifdef __AVR__
+ #include <avr/power.h> 
+#endif
 
 char server[] = "ingress.opensensemap.org";
 
@@ -110,6 +114,15 @@ bool connected = false;
 String timestamp = "";
 char * timestampchar = "";
 
+void onMessageReceived(const uint8_t *macAddr, const uint8_t *incomingData, int len)
+{
+  memcpy(&stationMsg, incomingData, sizeof(stationMsg));
+  sensors[macAddr[5]].decibel = stationMsg.decibel;
+  gettimeofday(&tv_now, NULL);
+  int64_t seconds = (int64_t)tv_now.tv_sec;
+  sensors[macAddr[5]].latency = (seconds - stationMsg.sending_time);
+}
+
 // define array for measurements with beforehand defined datatype 
 char buffer[750];  // might be too short for many phenomenons
 measurement measurements[NUM_SENSORS];
@@ -193,12 +206,87 @@ void submitValues() {
 String getTimestamp(String oldDatetime){
   int found = oldDatetime.indexOf("-00:00");
 
-  // Ersetze "-00:00" durch "Z"
   if (found != -1) {
     oldDatetime.replace("-00:00", "Z");
   }
 
   return oldDatetime;
+}
+
+#define LED_PIN 3
+#define LED_COUNT 64
+
+Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
+//Adafruit_BicolorMatrix matrix = Adafruit_BicolorMatrix();
+//Adafruit_8x8matrix matrix = Adafruit_8x8matrix();
+
+void smileFace () { 
+  int smileyArr[LED_COUNT] = {
+    0,0,1,1,1,1,0,0,
+    0,1,0,0,0,0,1,0,
+    1,0,1,0,0,1,0,1,
+    1,0,0,0,0,0,0,1,
+    1,0,1,0,0,1,0,1,
+    1,0,0,1,1,0,0,1,
+    0,1,0,0,0,0,1,0,
+    0,0,1,1,1,1,0,0,
+  };
+  int col = 0;
+  for (int i = 0; i < LED_COUNT; i++) {  
+    strip.show();
+    if(smileyArr[i] == 1) {
+      col = 255;
+    }
+    strip.setPixelColor(i, 0, col, 0);
+    delay (40); 
+    col = 0;
+    }
+}
+
+void neutralFace () { 
+  int smileyArr[LED_COUNT] = {
+    0,0,1,1,1,1,0,0,
+    0,1,0,0,0,0,1,0,
+    1,0,1,0,0,1,0,1,
+    1,0,0,0,0,0,0,1,
+    1,0,1,1,1,1,0,1,
+    1,0,0,0,0,0,0,1,
+    0,1,0,0,0,0,1,0,
+    0,0,1,1,1,1,0,0,
+  };
+  int col = 0;
+  for (int i = 0; i < LED_COUNT; i++) {  
+    strip.show();
+    if(smileyArr[i] == 1) {
+      col = 255;
+    }
+    strip.setPixelColor(i, 0, col, 0);
+    delay (40); 
+    col = 0;
+    }
+}
+
+void frownFace () { 
+  int smileyArr[LED_COUNT] = {
+    0,0,1,1,1,1,0,0,
+    0,1,0,0,0,0,1,0,
+    1,0,1,0,0,1,0,1,
+    1,0,0,0,0,0,0,1,
+    1,0,0,1,1,0,0,1,
+    1,0,1,0,0,1,0,1,
+    0,1,0,0,0,0,1,0,
+    0,0,1,1,1,1,0,0,
+  };
+  int col = 0;
+  for (int i = 0; i < LED_COUNT; i++) {  
+    strip.show();
+    if(smileyArr[i] == 1) {
+      col = 255;
+    }
+    strip.setPixelColor(i, 0, col, 0);
+    delay (40); 
+    col = 0;
+    }
 }
 
 
@@ -238,12 +326,28 @@ void setup()
   Serial.print("New ESP Board MAC Address:  ");
   Serial.println(WiFi.macAddress());
 
-  delay(2000);
+  if (esp_now_init() == ESP_OK)
+  {
+    Serial.println("ESPNow Init success");
+  }
+  else
+  {
+    Serial.println("ESPNow Init fail");
+    return;
+  }
+
+  esp_now_register_recv_cb(onMessageReceived);
+  //matrix.begin(0x70); // pass in the address
+
+  strip.begin();           
+  strip.show();            
+  strip.setBrightness(50); 
+
+  delay(1000);
 
   setupMillis = millis();
   previousMillis = millis();
   previousSecond = millis();
-
 
 }
 
@@ -267,6 +371,32 @@ void loop()
   if (currentMillis - previousSecond >= receivingInterval)
   {
     averageDbaValueM10 = int(10 * 10 * log10(dbaSum / readingCount));
+
+    if (averageDbaValueM10 < 500)
+    {
+     /* matrix.clear();
+      //matrix.drawBitmap(0, 0, smile_bmp, 8, 8, LED_GREEN);
+      matrix.drawBitmap(0, 0, smile_bmp, 8, 8, LED_ON);
+      matrix.writeDisplay();*/
+	    smileFace();
+    }
+    else if (averageDbaValueM10 < 600) // 5 dBA lower than the 45dBA threshold
+    {
+      /*matrix.clear();
+      //matrix.drawBitmap(0, 0, neutral_bmp, 8, 8, LED_YELLOW);
+      matrix.drawBitmap(0, 0, neutral_bmp, 8, 8, LED_ON);
+      matrix.writeDisplay();*/
+	    neutralFace();
+    }
+    else
+    {
+      /*matrix.clear();
+      //matrix.drawBitmap(0, 0, frown_bmp, 8, 8, LED_RED);
+      matrix.drawBitmap(0, 0, frown_bmp, 8, 8, LED_ON);
+      matrix.writeDisplay();*/
+	    frownFace();
+	
+    }
 
     float secondValues[3];
     secondValues[0] = 0.0;
