@@ -9,7 +9,7 @@
 #include "Adafruit_LEDBackpack.h"
 #include "esp_wpa2.h" 
 #include <ezTime.h>
-#include <Adafruit_NeoPixel.h>
+#include <Adafruit_NeoPixel.h> //Library Adafruit NeoMatrix required 
 #ifdef __AVR__
  #include <avr/power.h> 
 #endif
@@ -344,7 +344,7 @@ void setup()
   strip.show();            
   strip.setBrightness(50); 
 
-  delay(1000);
+  delay(40);
 
   setupMillis = millis();
   previousMillis = millis();

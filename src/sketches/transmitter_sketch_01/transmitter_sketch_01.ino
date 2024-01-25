@@ -6,6 +6,10 @@
 #include "custom_wifi_init.h"
 #include <Adafruit_GFX.h>
 #include "Adafruit_LEDBackpack.h"
+#include <Adafruit_NeoPixel.h> //Library Adafruit NeoMatrix required 
+#ifdef __AVR__
+ #include <avr/power.h> 
+#endif
 
 // MAC adresses
 //uint8_t receiverAddress[] = {0x4D, 0x61, 0x72, 0x74, 0x69, 0x02};
@@ -34,6 +38,9 @@ const char* ntpServer = "pool.ntp.org";
 #define SoundSensorPin 3  // this pin read the analog voltage from the sound level meter
 #define VREF  5.0 // voltage on AREF pin,default:operating voltage
 
+#define LED_PIN    5 // select PIN connected to matrix DIN0
+#define LED_COUNT 64
+
 const int measurementInterval = 125; // in ms
 const int sendingInterval = 1000; // in ms
 
@@ -52,7 +59,78 @@ void messageSent(const uint8_t *macAddr, esp_now_send_status_t status) {
   }
 }
 
-Adafruit_BicolorMatrix matrix = Adafruit_BicolorMatrix();
+//Adafruit_BicolorMatrix matrix = Adafruit_BicolorMatrix();
+
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
+
+void smileFace () { 
+  int smileyArr[LED_COUNT] = {
+    0,0,1,1,1,1,0,0,
+    0,1,0,0,0,0,1,0,
+    1,0,1,0,0,1,0,1,
+    1,0,0,0,0,0,0,1,
+    1,0,1,0,0,1,0,1,
+    1,0,0,1,1,0,0,1,
+    0,1,0,0,0,0,1,0,
+    0,0,1,1,1,1,0,0,
+  };
+  int col = 0;
+  for (int i = 0; i < LED_COUNT; i++) {  
+    strip.show();
+    if(smileyArr[i] == 1) {
+      col = 255;
+    }
+    strip.setPixelColor(i, 0, col, 0);
+    col = 0;
+    }
+}
+
+void neutralFace () { 
+  int smileyArr[LED_COUNT] = {
+    0,0,1,1,1,1,0,0,
+    0,1,0,0,0,0,1,0,
+    1,0,1,0,0,1,0,1,
+    1,0,0,0,0,0,0,1,
+    1,0,1,1,1,1,0,1,
+    1,0,0,0,0,0,0,1,
+    0,1,0,0,0,0,1,0,
+    0,0,1,1,1,1,0,0,
+  };
+  int col1 = 0;
+  int col2 = 0;
+  for (int i = 0; i < LED_COUNT; i++) {  
+    strip.show();
+    if(smileyArr[i] == 1) {
+      col1 = 255;
+      col2 = 165;
+    }
+    strip.setPixelColor(i, col1, col2, 0);
+    col1 = 0;
+    col2 = 0;
+    }
+}
+
+void frownFace () { 
+  int smileyArr[LED_COUNT] = {
+    0,0,1,1,1,1,0,0,
+    0,1,0,0,0,0,1,0,
+    1,0,1,0,0,1,0,1,
+    1,0,0,0,0,0,0,1,
+    1,0,1,1,1,1,0,1,
+    1,0,1,0,0,1,0,1,
+    0,1,0,0,0,0,1,0,
+    0,0,1,1,1,1,0,0,
+  };
+  int col = 0;
+  for (int i = 0; i < LED_COUNT; i++) {  
+    strip.show();
+    if(smileyArr[i] == 1) {
+      col = 255;
+    }
+    strip.setPixelColor(i, col, 0, 0);
+    col = 0;
+    }
+}
 
 void setup(){
   Serial.begin(115200);
@@ -93,7 +171,12 @@ void setup(){
   }
   
   esp_now_register_send_cb(messageSent);
-  matrix.begin(0x70);
+  
+  strip.begin();           
+  strip.show();            
+  strip.setBrightness(50); 
+
+  delay(40);
 
   // set options for connection to peer device
   memcpy(peerInfo.peer_addr, receiverAddress, 6); // deep-copy cause of array immutability
@@ -108,34 +191,6 @@ void setup(){
 }
  
 
-static const uint8_t PROGMEM
-    smile_bmp[] =
-        {B00111100,
-         B01000010,
-         B10100101,
-         B10000001,
-         B10100101,
-         B10011001,
-         B01000010,
-         B00111100},
-    neutral_bmp[] =
-        {B00111100,
-         B01000010,
-         B10100101,
-         B10000001,
-         B10111101,
-         B10000001,
-         B01000010,
-         B00111100},
-    frown_bmp[] =
-        {B00111100,
-         B01000010,
-         B10100101,
-         B10000001,
-         B10111101,
-         B10100101,
-         B01000010,
-         B00111100};
 
 void loop(){
   unsigned long currentMillis = millis(); // current time in ms
@@ -183,21 +238,28 @@ void loop(){
 
     if (averageDbaValueM10 < 500)
     {
-      matrix.clear();
+      /*matrix.clear();
       matrix.drawBitmap(0, 0, smile_bmp, 8, 8, LED_GREEN);
-      matrix.writeDisplay();
-    };
+      matrix.drawBitmap(0, 0, smile_bmp, 8, 8, LED_ON);
+      matrix.writeDisplay();*/
+	    smileFace();
+    }
     else if (averageDbaValueM10 < 600) // 5 dBA lower than the 45dBA threshold
     {
-      matrix.clear();
-      matrix.drawBitmap(0, 0, neutral_bmp, 8, 8, LED_YELLOW);
-      matrix.writeDisplay();
+      /*matrix.clear();
+      //matrix.drawBitmap(0, 0, neutral_bmp, 8, 8, LED_YELLOW);
+      matrix.drawBitmap(0, 0, neutral_bmp, 8, 8, LED_ON);
+      matrix.writeDisplay();*/
+	    neutralFace();
     }
     else
     {
-      matrix.clear();
-      matrix.drawBitmap(0, 0, frown_bmp, 8, 8, LED_RED);
-      matrix.writeDisplay();
+      /*matrix.clear();
+      //matrix.drawBitmap(0, 0, frown_bmp, 8, 8, LED_RED);
+      matrix.drawBitmap(0, 0, frown_bmp, 8, 8, LED_ON);
+      matrix.writeDisplay();*/
+	    frownFace();
+	
     }
 
     sendingCounter++;
