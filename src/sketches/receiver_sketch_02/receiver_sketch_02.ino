@@ -11,8 +11,9 @@
 #include <ezTime.h>
 #include <Adafruit_NeoPixel.h> //Library Adafruit NeoMatrix required 
 #ifdef __AVR__
- #include <avr/power.h> 
+ #include <avr/power.h>
 #endif
+#include <Adafruit_SleepyDog.h>
 
 char server[] = "ingress.opensensemap.org";
 
@@ -155,13 +156,6 @@ void writeMeasurementsToClient() {
 
 void submitValues() {
   // check if still connected
-  Serial.println(WiFi.status());
-  while (WiFi.status() != WL_CONNECTED) {
-    Serial.println("Connection to WiFi lost. Reconnecting.");
-    initHomeWifi("MagentaWLAN-CCKB");
-    //initUniWiFi("uni-ms");
-  }
-
   for (uint8_t timeout = 2; timeout != 0; timeout--) {
     Serial.println(F("\nconnecting..."));
     connected = client.connect(server, 443);
@@ -346,6 +340,8 @@ void setup()
 
   delay(40);
 
+  Watchdog.enable(62000);
+
   setupMillis = millis();
   previousMillis = millis();
   previousSecond = millis();
@@ -354,6 +350,12 @@ void setup()
 
 void loop()
 {
+  if (WiFi.status() != WL_CONNECTED) {
+    Serial.println("Connection to WiFi lost again. Reconnecting.");
+    initHomeWifi("MagentaWLAN-CCKB");
+    //initUniWiFi("uni-ms");
+  }
+
   unsigned long currentMillis = millis(); // current time in ms
 
   if (currentMillis - previousMillis >= measurementInterval) 
@@ -440,10 +442,14 @@ void loop()
   {
     Serial.println("start upload");
     submitValues();
+
     
     // update global variables:
     sendingCounter++;
     dbaSum = 0;
     readingCount = 0;
+
+    Watchdog.reset();
+    
   }
 }
