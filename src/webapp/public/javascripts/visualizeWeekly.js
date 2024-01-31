@@ -11,7 +11,7 @@ document.addEventListener("DOMContentLoaded", function(){
         const midDataArray = JSON.parse(midData);
         const rightDataArray = JSON.parse(rightData);
         dbGraph(getDB(leftDataArray), getDB(midDataArray), getDB(rightDataArray), getTime(leftDataArray));
-        //showAvgMax(getDB(leftDataArray, midDataArray, rightDataArray));
+        showAvgMax(getDB(leftDataArray), getDB(midDataArray), getDB(rightDataArray));
     } else {
         console.log("No data found in localStorage");
         //window.location.href = '/'
@@ -107,15 +107,44 @@ function dbGraph(dBRightData, dBMidData, dBLeftData, dBTime){
 
 
 // Display the Average and Maxima of the Data
-function showAvgMax(data1, data2, data3) {
-    const maximum = Math.max(...data1);
-    const average = calculateAverage(data1);
-    document.getElementById('average').innerHTML = average;
-    document.getElementById('maximum').innerText = maximum;
+function showAvgMax(left, mid, right) {
+    const left_max = Math.max(...left);
+    const left_avg = calculateAverage(left);
+    const mid_max = Math.max(...mid);
+    const mid_avg = calculateAverage(mid);
+    const right_max = Math.max(...right);
+    const right_avg = calculateAverage(right);
+    const max = Math.max(...left, ...mid, ... right);
+    const avg = calculateAverage([...left, ...mid, ... right]);
+    let table = document.getElementById("DB-table")
+    let tbody = document.createElement('tbody')
+    let row = tbody.insertRow()
+    let cell1 = row.insertCell()
+    cell1.innerHTML = "durchschnittliche Dezibel:"
+    let cell2 = row.insertCell()
+    cell2.innerHTML = left_avg
+    let cell3 = row.insertCell()
+    cell3.innerHTML = mid_avg
+    let cell4 = row.insertCell()
+    cell4.innerHTML = right_avg
+    let cell5 = row.insertCell()
+    cell5.innerHTML = avg
+    let row2 = tbody.insertRow()
+    let cell6 = row2.insertCell()
+    cell6.innerHTML = "maximale Dezibel:"
+    let cell7 = row2.insertCell()
+    cell7.innerHTML = left_max
+    let cell8 = row2.insertCell()
+    cell8.innerHTML = mid_max
+    let cell9 = row2.insertCell()
+    cell9.innerHTML = right_max
+    let cell10 = row2.insertCell()
+    cell10.innerHTML = max
+    table.tBodies[0].replaceWith(tbody)
 }
 
-// noch an logarithmus-skala anpassen
+// calc DB-Average
 function calculateAverage(arr) {
-    const sum = arr.reduce((acc, val) => acc + (Math.pow(10,(val/10))), 0);
-    return Math.round(Math.log10(sum / arr.length) * 100) / 10;
+  const sum = arr.reduce((acc, val) => acc + (Math.pow(10,(val/10))), 0);
+  return Math.round(Math.log10(sum / arr.length) * 100) / 10;
 }

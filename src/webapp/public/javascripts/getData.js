@@ -68,7 +68,7 @@ async function readTextareasWeekly(){
     const dateBegin = date + " 16:00:00 GMT+0100";
     const earlyDate =  new Date(dateBegin);
     
-    const nextDate = new Date (new Date(earlyDate).getTime() + calc12h());
+    const nextDate = new Date (new Date(earlyDate).getTime() + (12 * 60 * 60 * 1000));
     const lateDate = new Date (nextDate);
 
 
