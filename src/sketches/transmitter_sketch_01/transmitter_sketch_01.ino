@@ -59,8 +59,8 @@ void messageSent(const uint8_t *macAddr, esp_now_send_status_t status) {
   }
 }
 
+//Adafruit_8x8matrix matrix = Adafruit_8x8matrix();
 //Adafruit_BicolorMatrix matrix = Adafruit_BicolorMatrix();
-
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
 
 void smileFace () { 
@@ -132,6 +132,7 @@ void frownFace () {
     }
 }
 
+
 void setup(){
   Serial.begin(115200);
   delay(3000);
@@ -142,9 +143,9 @@ void setup(){
   srand(1);
 
   // estatblish wifi connection
-  initUniWiFi("uni-ms");
-  //initHomeWifi(""); // for testing
-  
+  //initUniWiFi("uni-ms");
+  initHomeWifi("MagentaWLAN-CCKB"); // for testing
+
   Serial.println("synchronizing NTP Server");
   // time server synchronization
   // ACHTUNG GEHT 1 STUNDE FALSCH
@@ -171,7 +172,8 @@ void setup(){
   }
   
   esp_now_register_send_cb(messageSent);
-  
+  //matrix.begin(0x70); // pass in the address
+
   strip.begin();           
   strip.show();            
   strip.setBrightness(50); 
@@ -189,9 +191,36 @@ void setup(){
     return;
   }
 }
- 
-
-
+/*
+static const uint8_t PROGMEM
+    smile_bmp[] =
+        {B00111100,
+         B01000010,
+         B10100101,
+         B10000001,
+         B10100101,
+         B10011001,
+         B01000010,
+         B00111100},
+    neutral_bmp[] =
+        {B00111100,
+         B01000010,
+         B10100101,
+         B10000001,
+         B10111101,
+         B10000001,
+         B01000010,
+         B00111100},
+    frown_bmp[] =
+        {B00111100,
+         B01000010,
+         B10100101,
+         B10000001,
+         B10111101,
+         B10100101,
+         B01000010,
+         B00111100};
+ */
 void loop(){
   unsigned long currentMillis = millis(); // current time in ms
   // check if measurementInterval expired
@@ -204,8 +233,9 @@ void loop(){
     //Serial.print(dbaValue,1);
     //Serial.println(" dBA");
 
+
     // update global variables:
-    dbaSum += pow(10,(dbaValue / 10));
+    dbaSum += pow(10,(dbaValue / 10.0));
     readingCount++;
     previousMillis = currentMillis;
   }
@@ -236,6 +266,7 @@ void loop(){
     Serial.print("Sending time [s sind 01.01.1970]: ");
     Serial.println(myMessage.sending_time);
 
+    
     if (averageDbaValueM10 < 500)
     {
       /*matrix.clear();
@@ -261,6 +292,7 @@ void loop(){
 	    frownFace();
 	
     }
+
 
     sendingCounter++;
     dbaSum=0;

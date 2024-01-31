@@ -114,7 +114,6 @@ float dbaSum = 0;                 // Sum of the dBA-values per sendingInterval
 int readingCount = 0;             // Count readings per sendingInterval
 int sendingCounter = 1;
 int averageDbaValueM10 = 0;
-bool connected = false;
 String timestamp = "";
 char * timestampchar = "";
 
@@ -155,13 +154,26 @@ void writeMeasurementsToClient() {
 } 
 
 void submitValues() {
+
+  while (WiFi.status() != WL_CONNECTED) {
+    Serial.println("Connection to WiFi lost. Reconnecting.");
+    //initUniWiFi("uni-ms");
+    initHomeWifi("MagentaWLAN-CCKB");
+    delay(500);
+  }
+
+  if (client.connected()) {
+    client.stop();
+    delay(1000);
+  }
+
   // check if still connected
+  bool connected = false;
   for (uint8_t timeout = 2; timeout != 0; timeout--) {
     Serial.println(F("\nconnecting..."));
     connected = client.connect(server, 443);
     if (connected == true) {
       // construct the HTTP POST request:
-      Serial.println("OSeM connected");
       sprintf_P(buffer,
                 PSTR("POST /boxes/%s/data HTTP/1.1\nAuthorization: "
                      "80d04ba62692e411cbb5c89e50e768a7e380f431c38c3406c4c38268bf69a293" // insert access token obtained from OpenSenseMap 
@@ -192,10 +204,12 @@ void submitValues() {
         Serial.write(c);
       }
       Serial.println();
+      client.stop();
 
       num_measurements = 0;
       break;
     }
+    delay(100);
   }
 }
 
@@ -340,8 +354,6 @@ void setup()
 
   delay(40);
 
-  Watchdog.enable(62000);
-
   setupMillis = millis();
   previousMillis = millis();
   previousSecond = millis();
@@ -407,7 +419,7 @@ void loop()
     float secondValues[3];
     secondValues[0] = 0.0;
     secondValues[1] = 0.0;
-    secondValues[2] = averageDbaValueM10/10;
+    secondValues[2] = averageDbaValueM10/10.0;
 
       for (int i = 0; i < 2; i++)
           {
@@ -418,10 +430,15 @@ void loop()
       Serial.println(":");
       Serial.print("Decibel [dB]: ");
       Serial.println(secondValues[i]);
-      Serial.print("Latency [s]: ");
-      Serial.println(sensors[i].latency);
       Serial.println();
     }
+
+      Serial.print("Sensor 2:");
+      Serial.print("Decibel [dB]: ");
+      Serial.println(secondValues[2]);
+      Serial.println();
+
+
 
     timestamp = getTimestamp(myTZ.dateTime(RFC3339));
     Serial.println(timestamp);
@@ -449,7 +466,6 @@ void loop()
     dbaSum = 0;
     readingCount = 0;
 
-    Watchdog.reset();
     
   }
 }
