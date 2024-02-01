@@ -1,5 +1,7 @@
 "use strict"
 
+var badge = null;
+
 // inital loading of data  when DOM loaded
 document.addEventListener("DOMContentLoaded", function()
 {
@@ -29,11 +31,14 @@ document.getElementById('threshold').addEventListener('input', function(event){
             const midDataArray = JSON.parse(midData);
             const rightDataArray = JSON.parse(rightData);
             dbGraph(getDB(leftDataArray), getDB(midDataArray), getDB(rightDataArray), getTime(leftDataArray));
+            checkValue(getDB(leftDataArray), getDB(midDataArray), getDB(rightDataArray));
         } else {
             console.log("No data found in localStorage");
+            hideTooLoudAlert();
         }
     } else {
         console.log('Invalid input. Please enter a number between 0 and 100.');
+        hideTooLoudAlert();
     }
 });
 
@@ -52,7 +57,7 @@ function getDB(array){
 function getTime(array){
     let timeOnly = [];
     for(let i = 0; i < array.length; i++){
-        timeOnly.push(new Date (new Date(array[i].createdAt).getTime()));
+        timeOnly.push(array[i].createdAt);
     }
     timeOnly.reverse();
     return timeOnly;
@@ -199,8 +204,43 @@ async function updateLiveValues(sensebox, leftSensor, midSensor, rightSensor)
         localStorage.setItem("rightData", JSON.stringify(rightData));
         dbGraph(getDB(leftData), getDB(midData), getDB(rightData), getTime(leftData));
         showAvgMax(getDB(leftData), getDB(midData), getDB(rightData));
+        checkValue(getDB(leftData), getDB(midData), getDB(rightData));
     } else {
         console.log("No data found in localStorage");
         window.location.href = '/'
     }
 }
+
+function checkValue(left, mid, right) {
+  var value = Math.max(left[44], mid[44], right[44]);
+  var threshold = parseFloat(document.getElementById('threshold').value);
+  console.log(value);
+    
+  if (value <= threshold) {
+    hideTooLoudAlert();
+  } else {
+    showTooLoudAlert();
+  }
+}
+
+function showTooLoudAlert() {
+  if(!badge){
+    badge = document.createElement('div');
+    badge.className = 'badge';
+    badge.innerText = 'Too Loud';
+    document.body.appendChild(badge);
+  } else {
+    badge.style.display = 'block';
+  }
+}
+
+  // Function to hide "Too Loud" alert
+function hideTooLoudAlert() {
+    console.log("Attempting to hide badge...");
+    var badge = document.querySelector('.badge');
+    console.log("Badge found:", badge);
+    if (badge) {
+      console.log("hide");
+      badge.style.display = 'none';
+    }
+  }
