@@ -22,6 +22,6 @@ input {
     padding: 5px 10px;
     border-radius: 50%;
     position: fixed;
-    bottom: 20px;
+    top: 20px;
     right: 20px;
 }
