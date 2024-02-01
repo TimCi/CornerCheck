@@ -15,3 +15,13 @@ body {
 input {
     margin: 5px;
 }
+
+.badge {
+    background-color: red;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 50%;
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+}
