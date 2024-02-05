@@ -1,0 +1,28 @@
+extends layout
+
+block links
+  link(rel='stylesheet' href='/stylesheets/styleVis.css')
+  script(src='https://cdn.plot.ly/plotly-2.28.0.min.js' charset='utf-8')
+
+block content
+  .container
+    h1 CornerCheck
+    #chart
+    
+    div
+      label(for='threshold') Grenzwert in dB(A):
+      input#threshold(type='number' value='55' min='0' max='100' step='5')
+      //- skript einladen
+      script(src="/javascripts/visualizeShort.js") 
+    
+    #stats
+      table#DB-table
+          thead
+            tr
+              th 
+              th linker Sensor 
+              th mittlerer Sensor
+              th rechter Sensor
+              th Gesamt
+          tbody
+      p#warning

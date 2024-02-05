@@ -1,0 +1,28 @@
+extends layout
+
+block links
+  link(rel='stylesheet' href='/stylesheets/styleVis.css')
+  script(src='https://cdn.plot.ly/plotly-2.28.0.min.js' charset='utf-8')
+
+block content
+  h1= title
+  div
+    p Willkommen in der Webapp vom Cornercheck! 
+  div 
+      form  
+        input#dateSelector(type='date' name='dateSelector')
+      button(id='weekly') Ändern
+  div
+    #chart
+    script(src="/javascripts/visualizeWeekly.js") 
+
+    #stats
+      table#DB-table
+          thead
+            tr
+              th 
+              th linker Sensor 
+              th mittlerer Sensor
+              th rechter Sensor
+              th Gesamt
+          tbody
