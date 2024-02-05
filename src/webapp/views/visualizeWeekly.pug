@@ -8,6 +8,10 @@ block content
   h1= title
   div
     p Willkommen in der Webapp vom Cornercheck! 
+  div 
+      form  
+        input#dateSelector(type='date' name='dateSelector')
+      button(id='weekly') Ändern
   div
     #chart
     script(src="/javascripts/visualizeWeekly.js") 

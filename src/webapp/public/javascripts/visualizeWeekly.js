@@ -1,36 +1,51 @@
 "use strict"
 
 
-document.addEventListener("DOMContentLoaded", function(){
-    const leftData = localStorage.getItem("leftDataWeekly");
-    const midData = localStorage.getItem("midDataWeekly");
-    const rightData = localStorage.getItem("rightDataWeekly");
-    console.log(leftData);
-    if (leftData && midData && rightData) {
-        const leftDataArray = JSON.parse(leftData);
-        const midDataArray = JSON.parse(midData);
-        const rightDataArray = JSON.parse(rightData);
-        dbGraph(getDB(leftDataArray), getDB(midDataArray), getDB(rightDataArray), getTime(leftDataArray));
-        showAvgMax(getDB(leftDataArray), getDB(midDataArray), getDB(rightDataArray));
-    } else {
-        console.log("No data found in localStorage");
-        //window.location.href = '/'
-    }
+document.addEventListener("DOMContentLoaded", function () {
+
+    const sensebox = JSON.parse(localStorage.getItem("sensebox"));
+    const leftSensor = JSON.parse(localStorage.getItem("leftSensor"));
+    const midSensor = JSON.parse(localStorage.getItem("midSensor"));
+    const rightSensor = JSON.parse(localStorage.getItem("rightSensor"));
+    const date = JSON.parse(localStorage.getItem("selectedDate"));
+
+    var datepickerInput = document.getElementById("dateSelector");
+    datepickerInput.value = date;
+
+    const dateBegin = date + " 16:00:00 GMT+0100";
+    const earlyDate = new Date(dateBegin);
+    const nextDate = new Date(new Date(earlyDate).getTime() + (12 * 60 * 60 * 1000));
+    const lateDate = new Date(nextDate);
+
+    updateValues(sensebox, leftSensor, midSensor, rightSensor, earlyDate, lateDate);
+
+
+    document.getElementById('weekly').addEventListener('click', function () {
+        const date = document.getElementById("dateSelector").value;
+        const dateBegin = date + " 16:00:00 GMT+0100";
+        const earlyDate = new Date(dateBegin);
+
+        const nextDate = new Date(new Date(earlyDate).getTime() + (12 * 60 * 60 * 1000));
+        const lateDate = new Date(nextDate);
+        updateValues(sensebox, leftSensor, midSensor, rightSensor, earlyDate, lateDate);
+    })
 });
 
-function getDB(array){
+
+
+function getDB(array) {
     let dBOnly = [];
-    for(let i = 0; i < array.length; i++){
+    for (let i = 0; i < array.length; i++) {
         dBOnly.push(array[i].value);
     }
     dBOnly.reverse();
     return dBOnly;
 }
 
-function getTime(array){
+function getTime(array) {
     let timeOnly = [];
-    for(let i = 0; i < array.length; i++){
-        timeOnly.push(new Date (new Date(array[i].createdAt).getTime()));
+    for (let i = 0; i < array.length; i++) {
+        timeOnly.push(new Date(new Date(array[i].createdAt).getTime()));
     }
     timeOnly.reverse();
     return timeOnly;
@@ -39,35 +54,37 @@ function getTime(array){
 
 
 // Build inital plotly graph with Data and Time, also add threshold line
-function dbGraph(dBRightData, dBMidData, dBLeftData, dBTime){
+function dbGraph(dBRightData, dBMidData, dBLeftData, dBTime) {
 
     // var threshold = document.getElementById('threshold').value;
     // var thresholdLine = Array(dBRightData.length).fill(threshold);
 
     const layout = {
-        yaxis: { title: 'Dezibel in db(A)'}, // range: [0, 80] to set the axis scale undinamically
+        yaxis: { title: 'Dezibel in db(A)' }, // range: [0, 80] to set the axis scale undinamically
         xaxis: {
             title: 'Zeit',
-            // Buttons for changing the size of the graph (15, 30, 45min), 45 being default 
+            // Buttons for changing the size of the graph
             autorange: true,
-            range: [dBTime[0], dBTime[dBTime.length-1]],
-            rangeselector: {buttons: [
-                {
-                  count: 3,
-                  label: '3h',
-                  step: 'hour',
-                  stepmode: 'backward'
-                },
-                {
-                  count: 6,
-                  label: '6h',
-                  step: 'hout',
-                  stepmode: 'backward'
-                },
-                { step: "all"}
-              ]},
+            range: [dBTime[0], dBTime[dBTime.length - 1]],
+            rangeselector: {
+                buttons: [
+                    {
+                        count: 3,
+                        label: '3h',
+                        step: 'hour',
+                        stepmode: 'backward'
+                    },
+                    {
+                        count: 6,
+                        label: '6h',
+                        step: 'hout',
+                        stepmode: 'backward'
+                    },
+                    { step: "all" }
+                ]
+            },
             // rangeslider beneath the graph. I dont know if it looks good, have to decide with the group (My opinion: Not that useful because we only use 45 minute data anyways)
-            rangeslider: {range: [dBTime[0], dBTime[dBTime.length-1]]},
+            rangeslider: { range: [dBTime[0], dBTime[dBTime.length - 1]] },
             type: 'date'
         }
     }
@@ -114,8 +131,8 @@ function showAvgMax(left, mid, right) {
     const mid_avg = calculateAverage(mid);
     const right_max = Math.max(...right);
     const right_avg = calculateAverage(right);
-    const max = Math.max(...left, ...mid, ... right);
-    const avg = calculateAverage([...left, ...mid, ... right]);
+    const max = Math.max(...left, ...mid, ...right);
+    const avg = calculateAverage([...left, ...mid, ...right]);
     let table = document.getElementById("DB-table")
     let tbody = document.createElement('tbody')
     let row = tbody.insertRow()
@@ -145,6 +162,35 @@ function showAvgMax(left, mid, right) {
 
 // calc DB-Average
 function calculateAverage(arr) {
-  const sum = arr.reduce((acc, val) => acc + (Math.pow(10,(val/10))), 0);
-  return Math.round(Math.log10(sum / arr.length) * 100) / 10;
+    const sum = arr.reduce((acc, val) => acc + (Math.pow(10, (val / 10))), 0);
+    return Math.round(Math.log10(sum / arr.length) * 100) / 10;
+}
+
+
+async function updateValues(sensebox, leftSensor, midSensor, rightSensor, earlyDate, lateDate) {
+
+    const boxURL = "https://api.opensensemap.org/boxes/" + sensebox + "/sensors";
+    const leftURL = "https://api.opensensemap.org/boxes/" + sensebox + "/data/" + leftSensor + "?from-date=" + earlyDate.toISOString() + "&to-date=" + lateDate.toISOString() + "&download=false&format=json";
+    const midURL = "https://api.opensensemap.org/boxes/" + sensebox + "/data/" + midSensor + "?from-date=" + earlyDate.toISOString() + "&to-date=" + lateDate.toISOString() + "&download=false&format=json";
+    const rightURL = "https://api.opensensemap.org/boxes/" + sensebox + "/data/" + rightSensor + "?from-date=" + earlyDate.toISOString() + "&to-date=" + lateDate.toISOString() + "&download=false&format=json";
+
+    const leftResponse = await fetch(leftURL);
+    const midResponse = await fetch(midURL);
+    const rightResponse = await fetch(rightURL);
+
+    let leftData = await leftResponse.json();
+    let midData = await midResponse.json();
+    let rightData = await rightResponse.json();
+
+    if (leftData && midData && rightData) {
+        localStorage.setItem("leftData", JSON.stringify(leftData));
+        localStorage.setItem("midData", JSON.stringify(midData));
+        localStorage.setItem("rightData", JSON.stringify(rightData));
+        dbGraph(getDB(leftData), getDB(midData), getDB(rightData), getTime(leftData));
+        showAvgMax(getDB(leftData), getDB(midData), getDB(rightData));
+        //checkValue(getDB(leftData), getDB(midData), getDB(rightData));
+    } else {
+        console.log("No data found in localStorage");
+        window.location.href = '/'
+    }
 }
