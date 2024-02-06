@@ -143,8 +143,8 @@ void setup(){
   srand(1);
 
   // estatblish wifi connection
-  //initUniWiFi("uni-ms");
-  initHomeWifi("MagentaWLAN-CCKB"); // for testing
+  initUniWiFi("uni-ms");
+  //initHomeWifi("MagentaWLAN-CCKB"); // for testing
 
   Serial.println("synchronizing NTP Server");
   // time server synchronization

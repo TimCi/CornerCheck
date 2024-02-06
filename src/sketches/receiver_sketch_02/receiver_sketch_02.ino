@@ -116,6 +116,7 @@ int sendingCounter = 1;
 int averageDbaValueM10 = 0;
 String timestamp = "";
 char * timestampchar = "";
+int errorcount = 0;
 
 void onMessageReceived(const uint8_t *macAddr, const uint8_t *incomingData, int len)
 {
@@ -193,6 +194,7 @@ void submitValues() {
       while (client.connected()) {
         String line = client.readStringUntil('\n');
         if (line == "\r") {
+          errorcount++;
           Serial.println("headers received");
           break;
         }
@@ -303,7 +305,7 @@ void setup()
 {
 
   Serial.begin(115200);
-  delay(3000);
+  delay(100);
 
   analogReadResolution(13);
 
@@ -311,8 +313,8 @@ void setup()
 
 
   // estatblish wifi connection
-  //initUniWiFi("uni-ms");
-  initHomeWifi("MagentaWLAN-CCKB"); // for testing
+  initUniWiFi("uni-ms");
+  //initHomeWifi("MagentaWLAN-CCKB"); // for testing
 
   client.setCACert(root_ca);
 
@@ -322,7 +324,7 @@ void setup()
   configTime(1, 0, ntpServer);
 
   // wait some time to ensure synchronization
-  delay(5000);
+  delay(2000);
   Serial.println("NTP Server synchronized"); 
 
   waitForSync();
@@ -352,7 +354,7 @@ void setup()
   strip.show();            
   strip.setBrightness(50); 
 
-  delay(40);
+  delay(100);
 
   setupMillis = millis();
   previousMillis = millis();
@@ -364,8 +366,8 @@ void loop()
 {
   if (WiFi.status() != WL_CONNECTED) {
     Serial.println("Connection to WiFi lost again. Reconnecting.");
-    initHomeWifi("MagentaWLAN-CCKB");
-    //initUniWiFi("uni-ms");
+    //initHomeWifi("MagentaWLAN-CCKB");
+    initUniWiFi("uni-ms");
   }
 
   unsigned long currentMillis = millis(); // current time in ms
@@ -386,6 +388,7 @@ void loop()
   if (currentMillis - previousSecond >= receivingInterval)
   {
     averageDbaValueM10 = int(10 * 10 * log10(dbaSum / readingCount));
+    averageDbaValueM10 = averageDbaValueM10 - 200.0;
 
     if (averageDbaValueM10 < 500)
     {
@@ -430,15 +433,17 @@ void loop()
       Serial.println(":");
       Serial.print("Decibel [dB]: ");
       Serial.println(secondValues[i]);
+      Serial.print("Latency [s]: ");
+      Serial.println(sensors[i].latency);
       Serial.println();
     }
 
-      Serial.print("Sensor 2:");
+      Serial.println("Sensor 2:");
       Serial.print("Decibel [dB]: ");
       Serial.println(secondValues[2]);
       Serial.println();
 
-
+      Serial.println(errorcount);
 
     timestamp = getTimestamp(myTZ.dateTime(RFC3339));
     Serial.println(timestamp);
