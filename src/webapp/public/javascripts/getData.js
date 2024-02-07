@@ -114,11 +114,11 @@ async function readTextareasWeekly() {
 document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('live').addEventListener('click', async function () {
         let { sensebox, leftSensor, midSensor, rightSensor } = await readTextareas();
-        window.location.href = '/short_vis' + '?sensebox=' + encodeURIComponent(sensebox) + '&leftSensor=' + encodeURIComponent(leftSensor) + '&midSensor=' + encodeURIComponent(midSensor) + '&rightSensor=' + encodeURIComponent(rightSensor);
+        window.location.href = '/visualizeShort' + '?sensebox=' + encodeURIComponent(sensebox) + '&leftSensor=' + encodeURIComponent(leftSensor) + '&midSensor=' + encodeURIComponent(midSensor) + '&rightSensor=' + encodeURIComponent(rightSensor);
     });
 
     document.getElementById('weekly').addEventListener('click', function () {
         readTextareasWeekly();
-        window.location.href = '/weekly_vis'
+        window.location.href = '/visualizeWeekly'
     })
 });
