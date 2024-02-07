@@ -33,11 +33,11 @@ document.getElementById('threshold').addEventListener('input', function (event) 
       checkValue(getDB(leftDataArray), getDB(midDataArray), getDB(rightDataArray));
     } else {
       console.log("No data found in localStorage");
-      hideTooLoudAlert();
+      closePopup();
     }
   } else {
     console.log('Invalid input. Please enter a number between 0 and 100.');
-    hideTooLoudAlert();
+    closePopup();
   }
 });
 
@@ -255,16 +255,18 @@ function checkValue(left, mid, right) {
   console.log(value);
 
   if (value >= threshold) {
-    showPopup();
+    openPopup();
   }
 }
 
 function openPopup() {
   document.getElementById('popup').style.display = 'flex';
+  document.getElementById('threshold').disabled = true;
 }
 
 function closePopup() {
   document.getElementById('popup').style.display = 'none';
+  document.getElementById('threshold').disabled = false;
 }
 
 // function showTooLoudAlert() {
