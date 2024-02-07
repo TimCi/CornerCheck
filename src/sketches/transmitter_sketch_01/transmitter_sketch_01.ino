@@ -13,7 +13,7 @@
 
 // MAC adresses
 //uint8_t receiverAddress[] = {0x4D, 0x61, 0x72, 0x74, 0x69, 0x02};
-uint8_t receiverAddress[] = {0x4E, 0xA1, 0x72, 0x74, 0x69, 0x02};
+uint8_t receiverAddress[] = {0x4E, 0xA1, 0x72, 0x74, 0x69, 0x03};
 uint8_t myAddress[] = {0x54, 0x69, 0x6D, 0x0A, 0x00, 0x01};
 
 // Information of the device to connect to
@@ -143,8 +143,8 @@ void setup(){
   srand(1);
 
   // estatblish wifi connection
-  initUniWiFi("uni-ms");
-  //initHomeWifi("MagentaWLAN-CCKB"); // for testing
+  //initUniWiFi("uni-ms");
+  initHomeWifi("MagentaWLAN-CCKB"); // for testing
 
   Serial.println("synchronizing NTP Server");
   // time server synchronization

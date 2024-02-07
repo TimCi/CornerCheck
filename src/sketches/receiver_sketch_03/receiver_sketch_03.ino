@@ -5,14 +5,8 @@
 #include "custom_wifi_init.h"
 #include <Wire.h>
 #include <WiFiClientSecure.h>
-#include <Adafruit_GFX.h>
-#include "Adafruit_LEDBackpack.h"
 #include "esp_wpa2.h" 
 #include <ezTime.h>
-#include <Adafruit_NeoPixel.h> //Library Adafruit NeoMatrix required 
-#ifdef __AVR__
- #include <avr/power.h>
-#endif
 #include <Adafruit_SleepyDog.h>
 
 char server[] = "ingress.opensensemap.org";
@@ -66,7 +60,7 @@ const char* root_ca =
 
 // MAC adress
 // uint8_t myAddress[] = {0x4D, 0x61, 0x72, 0x74, 0x69, 0x02};
-uint8_t myAddress[] = {0x4E, 0xA1, 0x72, 0x74, 0x69, 0x02};
+uint8_t myAddress[] = {0x4E, 0xA1, 0x72, 0x74, 0x69, 0x03};
 
 typedef struct data
 {
@@ -96,13 +90,6 @@ struct timeval tv_now;
 // NTP Server for time synchronization
 const char *ntpServer = "pool.ntp.org";
 
-#define SoundSensorPin 3  // this pin read the analog voltage from the sound level meter
-#define VREF  5.0 // voltage on AREF pin,default:operating voltage
-
-#define LED_PIN    5 // select PIN connected to matrix DIN0
-#define LED_COUNT 64
-
-const int measurementInterval = 125; // in ms
 const int receivingInterval = 1000; // in ms
 const int sendingInterval = 60000;  // in ms
 
@@ -110,10 +97,8 @@ unsigned long currentMillis = 0;
 unsigned long previousMillis = 0;
 unsigned long previousSecond = 0;
 unsigned long setupMillis = 0; // last time, the sensor was read
-float dbaSum = 0;                 // Sum of the dBA-values per sendingInterval
 int readingCount = 0;             // Count readings per sendingInterval
 int sendingCounter = 1;
-int averageDbaValueM10 = 0;
 String timestamp = "";
 char * timestampchar = "";
 int errorcount = 0;
@@ -226,95 +211,16 @@ String getTimestamp(String oldDatetime){
   return oldDatetime;
 }
 
-
-Adafruit_NeoPixel strip = Adafruit_NeoPixel(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
-//Adafruit_BicolorMatrix matrix = Adafruit_BicolorMatrix();
-//Adafruit_8x8matrix matrix = Adafruit_8x8matrix();
-
-void smileFace () { 
-  int smileyArr[LED_COUNT] = {
-    0,0,1,1,1,1,0,0,
-    0,1,0,0,0,0,1,0,
-    1,0,1,0,0,1,0,1,
-    1,0,0,0,0,0,0,1,
-    1,0,1,0,0,1,0,1,
-    1,0,0,1,1,0,0,1,
-    0,1,0,0,0,0,1,0,
-    0,0,1,1,1,1,0,0,
-  };
-  int col = 0;
-  for (int i = 0; i < LED_COUNT; i++) {  
-    strip.show();
-    if(smileyArr[i] == 1) {
-      col = 255;
-    }
-    strip.setPixelColor(i, 0, col, 0);
-    col = 0;
-    }
-}
-
-void neutralFace () { 
-  int smileyArr[LED_COUNT] = {
-    0,0,1,1,1,1,0,0,
-    0,1,0,0,0,0,1,0,
-    1,0,1,0,0,1,0,1,
-    1,0,0,0,0,0,0,1,
-    1,0,1,1,1,1,0,1,
-    1,0,0,0,0,0,0,1,
-    0,1,0,0,0,0,1,0,
-    0,0,1,1,1,1,0,0,
-  };
-  int col1 = 0;
-  int col2 = 0;
-  for (int i = 0; i < LED_COUNT; i++) {  
-    strip.show();
-    if(smileyArr[i] == 1) {
-      col1 = 255;
-      col2 = 165;
-    }
-    strip.setPixelColor(i, col1, col2, 0);
-    col1 = 0;
-    col2 = 0;
-    }
-}
-
-void frownFace () { 
-  int smileyArr[LED_COUNT] = {
-    0,0,1,1,1,1,0,0,
-    0,1,0,0,0,0,1,0,
-    1,0,1,0,0,1,0,1,
-    1,0,0,0,0,0,0,1,
-    1,0,1,1,1,1,0,1,
-    1,0,1,0,0,1,0,1,
-    0,1,0,0,0,0,1,0,
-    0,0,1,1,1,1,0,0,
-  };
-  int col = 0;
-  for (int i = 0; i < LED_COUNT; i++) {  
-    strip.show();
-    if(smileyArr[i] == 1) {
-      col = 255;
-    }
-    strip.setPixelColor(i, col, 0, 0);
-    col = 0;
-    }
-}
-
-
 void setup()
 {
 
   Serial.begin(115200);
   delay(100);
 
-  analogReadResolution(13);
-
-  srand(1);
-
 
   // estatblish wifi connection
-  initUniWiFi("uni-ms");
-  //initHomeWifi("MagentaWLAN-CCKB"); // for testing
+  //initUniWiFi("uni-ms");
+  initHomeWifi("MagentaWLAN-CCKB"); // for testing
 
   client.setCACert(root_ca);
 
@@ -350,15 +256,12 @@ void setup()
   esp_now_register_recv_cb(onMessageReceived);
   //matrix.begin(0x70); // pass in the address
 
-  strip.begin();           
-  strip.show();            
-  strip.setBrightness(50); 
-
-  delay(100);
 
   setupMillis = millis();
   previousMillis = millis();
   previousSecond = millis();
+
+  Watchdog.enable(65000);
 
 }
 
@@ -366,95 +269,42 @@ void loop()
 {
   if (WiFi.status() != WL_CONNECTED) {
     Serial.println("Connection to WiFi lost again. Reconnecting.");
-    //initHomeWifi("MagentaWLAN-CCKB");
-    initUniWiFi("uni-ms");
+    initHomeWifi("MagentaWLAN-CCKB");
+    //initUniWiFi("uni-ms");
   }
 
   unsigned long currentMillis = millis(); // current time in ms
 
-  if (currentMillis - previousMillis >= measurementInterval) 
-  {
-    float voltageValue,dbaValue;
-    voltageValue = analogReadMilliVolts(SoundSensorPin) / 1000.0; // measure Voltage of Sensor
-    dbaValue = voltageValue * 50.0;  //convert voltage to decibel value
-
-    // update global variables:
-    dbaSum += pow(10,(dbaValue / 10.0));
-    readingCount++;
-    previousMillis = currentMillis;
-  }  
-
   // check if receivingInterval expired
   if (currentMillis - previousSecond >= receivingInterval)
   {
-    averageDbaValueM10 = int(10 * 10 * log10(dbaSum / readingCount));
-    averageDbaValueM10 = averageDbaValueM10 - 200.0;
-
-    if (averageDbaValueM10 < 500)
-    {
-      /*matrix.clear();
-      matrix.drawBitmap(0, 0, smile_bmp, 8, 8, LED_GREEN);
-      matrix.drawBitmap(0, 0, smile_bmp, 8, 8, LED_ON);
-      matrix.writeDisplay();*/
-	    smileFace();
-    }
-    else if (averageDbaValueM10 < 600) // 5 dBA lower than the 45dBA threshold
-    {
-      /*matrix.clear();
-      //matrix.drawBitmap(0, 0, neutral_bmp, 8, 8, LED_YELLOW);
-      matrix.drawBitmap(0, 0, neutral_bmp, 8, 8, LED_ON);
-      matrix.writeDisplay();*/
-	    neutralFace();
-    }
-    else
-    {
-      /*matrix.clear();
-      //matrix.drawBitmap(0, 0, frown_bmp, 8, 8, LED_RED);
-      matrix.drawBitmap(0, 0, frown_bmp, 8, 8, LED_ON);
-      matrix.writeDisplay();*/
-	    frownFace();
-	
-    }
-
-    
-      
 
     float secondValues[3];
     secondValues[0] = 0.0;
     secondValues[1] = 0.0;
-    secondValues[2] = averageDbaValueM10/10.0;
+    secondValues[2] = 0.0;
 
-      for (int i = 0; i < 2; i++)
-          {
+    for (int i = 0; i < 3; i++){
     // Change dBA*10 ints to normal dBA floats
       secondValues[i] = sensors[i].decibel / 10.0;
+      Serial.println();
       Serial.print("Sensor ");
       Serial.print(i);
-      Serial.println(":");
-      Serial.print("Decibel [dB]: ");
+      Serial.print(":");
       Serial.println(secondValues[i]);
-      Serial.print("Latency [s]: ");
-      Serial.println(sensors[i].latency);
-      Serial.println();
     }
 
-      Serial.println("Sensor 2:");
-      Serial.print("Decibel [dB]: ");
-      Serial.println(secondValues[2]);
-      Serial.println();
-
-      Serial.println(errorcount);
-
     timestamp = getTimestamp(myTZ.dateTime(RFC3339));
-    Serial.println(timestamp);
     timestampchar = new char[timestamp.length()+1];
     strcpy(timestampchar, timestamp.c_str());
+
+    Serial.println(timestamp);
+    Serial.println(errorcount);
 
     addMeasurement(SENSOR_ID8B7, secondValues[0], timestampchar);
     addMeasurement(SENSOR_ID8B6, secondValues[1], timestampchar);
     addMeasurement(SENSOR_ID8B5, secondValues[2], timestampchar);
 
-    dbaSum=0;
     readingCount=0;
     previousSecond = currentMillis;
   }
@@ -465,12 +315,16 @@ void loop()
     Serial.println("start upload");
     submitValues();
 
+    if(errorcount > 5) {
+      ESP.restart();
+    }
+
+    // eventuell reset;
+    Watchdog.reset();
     
     // update global variables:
     sendingCounter++;
-    dbaSum = 0;
     readingCount = 0;
 
-    
   }
 }
