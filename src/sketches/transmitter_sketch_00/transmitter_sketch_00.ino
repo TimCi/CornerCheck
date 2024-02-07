@@ -290,6 +290,7 @@ void loop(){
       matrix.drawBitmap(0, 0, frown_bmp, 8, 8, LED_ON);
       matrix.writeDisplay();*/
 	    frownFace();
+      
 	
     }
 
