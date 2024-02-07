@@ -1,6 +1,5 @@
 "use strict"
 
-
 document.addEventListener("DOMContentLoaded", function () {
 
     const sensebox = JSON.parse(localStorage.getItem("sensebox"));
