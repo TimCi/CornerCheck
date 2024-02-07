@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title></title>
+    <link rel="stylesheet" href="/stylesheets/style.css">
+    <link rel="stylesheet" href="/stylesheets/styleVis.css">
+    <script src="https://cdn.plot.ly/plotly-2.28.0.min.js" charset="utf-8"></script>
+  </head>
+  <body>
+    <div class="container">
+      <h1>CornerCheck</h1>
+      <div id="chart"></div>
+      <div>
+        <label for="threshold">Grenzwert in dB(A):</label>
+        <input id="threshold" type="number" value="55" min="0" max="100" step="5">
+        <script src="/javascripts/visualizeShort.js"> </script>
+      </div>
+      <div id="stats">
+        <table id="DB-table">
+          <thead>
+            <tr>
+              <th> </th>
+              <th>linker Sensor </th>
+              <th>mittlerer Sensor</th>
+              <th>rechter Sensor</th>
+              <th>Gesamt</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+        <p id="warning"></p>
+      </div>
+    </div>
+    <hr>
+    <div>
+      <footer id="footer">
+        <p>© 2024 Michael Brüggemann, Tim Ciroth, Finn Geßner, Martin Kriger</p>
+      </footer>
+    </div>
+  </body>
+</html>
