@@ -62,15 +62,14 @@ function getTime(array) {
   timeOnly.reverse();
   return timeOnly;
 }
-
+//leaves out all values under 10dB (as they are most likely measurement arror)
 function discardUnder10(arr) {
-  console.log(arr);
   for (let i = 0; i < arr.length; i++) {
     if (arr[i] <= 10) {
       arr.splice(i, 1);
     }
   }
-  console.log(arr);
+  //console.log(arr);
   return arr;
 }
 
@@ -105,7 +104,7 @@ function dbGraph(dBRightData, dBMidData, dBLeftData, dBTime) {
           },
           { step: "all" }
         ]
-      },
+      }
       // rangeslider beneath the graph. I dont know if it looks good, have to decide with the group (My opinion: Not that useful because we only use 45 minute data anyways)
       // rangeslider: {range: [dBTime[0], dBTime[parseInt(document.getElementById('timespan').value)-1]]},
       // type: 'date'
@@ -121,7 +120,8 @@ function dbGraph(dBRightData, dBMidData, dBLeftData, dBTime) {
     // marker: {
     //   size: 5, // Change this value to adjust the dot size
     // },
-    // z: 5
+    // z: 5,
+    connectgaps: false
   }
 
   var midSensorTrace = {
@@ -134,6 +134,7 @@ function dbGraph(dBRightData, dBMidData, dBLeftData, dBTime) {
     //   size: 5, // Change this value to adjust the dot size
     // },
     // z: 5
+    connectgaps: false
   }
 
   var rightSensorTrace = {
@@ -146,6 +147,7 @@ function dbGraph(dBRightData, dBMidData, dBLeftData, dBTime) {
     //   size: 5, // Change this value to adjust the dot size
     // },
     // z: 5
+    connectgaps: false
   }
 
   var thresholdTrace = {
@@ -252,31 +254,37 @@ function checkValue(left, mid, right) {
   var threshold = parseFloat(document.getElementById('threshold').value);
   console.log(value);
 
-  if (value <= threshold) {
-    hideTooLoudAlert();
-  } else {
-    showTooLoudAlert();
+  if (value >= threshold) {
+    showPopup();
   }
 }
 
-function showTooLoudAlert() {
-  if (!badge) {
-    badge = document.createElement('div');
-    badge.className = 'badge';
-    badge.innerText = 'Too Loud';
-    document.body.appendChild(badge);
-  } else {
-    badge.style.display = 'block';
-  }
+function openPopup() {
+  document.getElementById('popup').style.display = 'flex';
 }
 
-// Function to hide "Too Loud" alert
-function hideTooLoudAlert() {
-  console.log("Attempting to hide badge...");
-  var badge = document.querySelector('.badge');
-  console.log("Badge found:", badge);
-  if (badge) {
-    console.log("hide");
-    badge.style.display = 'none';
-  }
+function closePopup() {
+  document.getElementById('popup').style.display = 'none';
 }
+
+// function showTooLoudAlert() {
+//   if (!badge) {
+//     badge = document.createElement('div');
+//     badge.className = 'badge';
+//     badge.innerText = 'Too Loud';
+//     document.body.appendChild(badge);
+//   } else {
+//     badge.style.display = 'block';
+//   }
+// }
+
+// // Function to hide "Too Loud" alert
+// function hideTooLoudAlert() {
+//   console.log("Attempting to hide badge...");
+//   var badge = document.querySelector('.badge');
+//   console.log("Badge found:", badge);
+//   if (badge) {
+//     console.log("hide");
+//     badge.style.display = 'none';
+//   }
+// }

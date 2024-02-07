@@ -59,6 +59,9 @@ function dbGraph(dBRightData, dBMidData, dBLeftData, dBTime) {
     // var threshold = document.getElementById('threshold').value;
     // var thresholdLine = Array(dBRightData.length).fill(threshold);
 
+    //console.log(dBTime[0]);
+    //console.log(dBTime[dBTime.length - 1]);
+
     const layout = {
         yaxis: { title: 'Dezibel in db(A)' }, // range: [0, 80] to set the axis scale undinamically
         xaxis: {
@@ -74,12 +77,12 @@ function dbGraph(dBRightData, dBMidData, dBLeftData, dBTime) {
                         step: 'hour',
                         stepmode: 'backward'
                     },
-                    {
-                        count: 6,
-                        label: '6h',
-                        step: 'hout',
-                        stepmode: 'backward'
-                    },
+                    // {
+                    //     count: 6,
+                    //     label: '6h',
+                    //     step: 'hout',
+                    //     stepmode: 'backward'
+                    //},
                     { step: "all" }
                 ]
             },
@@ -93,21 +96,33 @@ function dbGraph(dBRightData, dBMidData, dBLeftData, dBTime) {
         x: dBTime,
         y: dBLeftData,
         name: "linker Sensor",
-        type: 'scatter'
+        type: 'scatter',
+        mode: "markers",
+        marker: {
+            size: 2, // Change this value to adjust the dot size
+        }
     }
 
     var midSensorTrace = {
         x: dBTime,
         y: dBMidData,
         name: "mittiger Sensor",
-        type: 'scatter'
+        type: 'scatter',
+        mode: "markers",
+        marker: {
+            size: 2, // Change this value to adjust the dot size
+        }
     }
 
     var rightSensorTrace = {
         x: dBTime,
         y: dBRightData,
         name: "rechter Sensor",
-        type: 'scatter'
+        type: 'scatter',
+        mode: "markers",
+        marker: {
+            size: 2, // Change this value to adjust the dot size
+        }
     }
 
     // var thresholdTrace = {

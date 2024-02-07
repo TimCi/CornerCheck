@@ -25,4 +25,8 @@ block content
               th rechter Sensor
               th Gesamt
           tbody
-      p#warning
+      #popup.popup-container
+        .popup-content
+          h1 Zu laut!
+          p Die Lautstärke ist zu hoch.
+          button.close-button(onclick='closePopup()') Verstanden
