@@ -148,7 +148,6 @@ function dbGraph(dBRightData, dBMidData, dBLeftData, dBTime) {
     name: 'Grenzwert',
     type: 'scatter',
     line: {
-      dash: 'dash',
       color: "red",
       size: 3
     },
