@@ -11,7 +11,7 @@ block content
     
     div
       label(for='threshold') Grenzwert in dB(A):
-      input#threshold(type='number' value='55' min='0' max='100' step='5')
+      input#threshold(type='number' value='60' min='0' max='100' step='5')
       //- skript einladen
       script(src="/javascripts/visualizeShort.js") 
     
@@ -25,4 +25,8 @@ block content
               th rechter Sensor
               th Gesamt
           tbody
-      p#warning
+      #popup.popup-container
+        .popup-content
+          h1 Zu laut!
+          p Die Lautstärke ist zu hoch.
+          button.close-button(onclick='closePopup()') Verstanden
