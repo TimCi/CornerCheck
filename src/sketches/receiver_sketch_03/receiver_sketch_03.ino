@@ -275,6 +275,7 @@ void loop()
 
     Serial.println(getTimestamp());
     Serial.println(errorcount);
+    
 
     addMeasurement(SENSOR_ID8B7, secondValues[0], getTimestamp());
     addMeasurement(SENSOR_ID8B6, secondValues[1], getTimestamp());
