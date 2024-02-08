@@ -58,7 +58,7 @@ function getDB(array) {
 function getTime(array) {
   let timeOnly = [];
   for (let i = 0; i < array.length; i++) {
-    timeOnly.push(array[i].createdAt);
+    timeOnly.push(new Date(new Date(array[i].createdAt).getTime()));
   }
   timeOnly.reverse();
   return timeOnly;
