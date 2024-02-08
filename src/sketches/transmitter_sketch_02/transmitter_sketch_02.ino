@@ -258,7 +258,7 @@ void loop(){
     //Serial.println("Average dBA-Value in last " + String(sendingInterval) + " ms: " + String(averageDbaValueM10));
     
     // safe dBA-Value in message
-    averageDbaValueM10 = averageDbaValueM10 - 180;
+    averageDbaValueM10 = averageDbaValueM10 - 190.0;
     myMessage.decibel = averageDbaValueM10;
 
     // get current time in seconds

@@ -218,7 +218,7 @@ void loop(){
     // ATTENTION: For better accuracy the value is multiplicated by 10 before the cast
     int averageDbaValueM10 = int(10 * 10 * log10(dbaSum / readingCount));
     //Zum Kalibrieren
-    averageDbaValueM10 = averageDbaValueM10 - 40.0;
+    averageDbaValueM10 = averageDbaValueM10 - 50.0;
     
     // safe dBA-Value in message
     myMessage.decibel = averageDbaValueM10;
