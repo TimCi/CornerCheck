@@ -55,12 +55,6 @@ function getTime(array) {
 // Build inital plotly graph with Data and Time, also add threshold line
 function dbGraph(dBRightData, dBMidData, dBLeftData, dBTime) {
 
-    // var threshold = document.getElementById('threshold').value;
-    // var thresholdLine = Array(dBRightData.length).fill(threshold);
-
-    //console.log(dBTime[0]);
-    //console.log(dBTime[dBTime.length - 1]);
-
     const layout = {
         yaxis: { title: 'Dezibel in db(A)' }, // range: [0, 80] to set the axis scale undinamically
         xaxis: {
@@ -68,24 +62,7 @@ function dbGraph(dBRightData, dBMidData, dBLeftData, dBTime) {
             // Buttons for changing the size of the graph
             autorange: true,
             range: [dBTime[0], dBTime[dBTime.length - 1]],
-            // rangeselector: {
-            //     buttons: [
-            //         {
-            //             count: 3,
-            //             label: '3h',
-            //             step: 'hour',
-            //             stepmode: 'backward'
-            //         },
-            //         // {
-            //         //     count: 6,
-            //         //     label: '6h',
-            //         //     step: 'hout',
-            //         //     stepmode: 'backward'
-            //         //},
-            //         { step: "all" }
-            //     ]
-            // },
-            // rangeslider beneath the graph. I dont know if it looks good, have to decide with the group (My opinion: Not that useful because we only use 45 minute data anyways)
+            // rangeslider beneath the graph.
             rangeslider: { range: [dBTime[0], dBTime[dBTime.length - 1]] },
             type: 'date'
         }
@@ -123,14 +100,6 @@ function dbGraph(dBRightData, dBMidData, dBLeftData, dBTime) {
             size: 2, // Change this value to adjust the dot size
         }
     }
-
-    // var thresholdTrace = {
-    //     x: dBTime,
-    //     y: thresholdLine,
-    //     name: 'Grenzwert',
-    //     type: 'scatter',
-    //     line: {dash: 'dash'}
-    // } 
 
     Plotly.purge("chart");
     Plotly.newPlot("chart", [leftSensorTrace, midSensorTrace, rightSensorTrace], layout);
@@ -202,7 +171,6 @@ async function updateValues(sensebox, leftSensor, midSensor, rightSensor, earlyD
         localStorage.setItem("rightData", JSON.stringify(rightData));
         dbGraph(getDB(leftData), getDB(midData), getDB(rightData), getTime(leftData));
         showAvgMax(getDB(leftData), getDB(midData), getDB(rightData));
-        //checkValue(getDB(leftData), getDB(midData), getDB(rightData));
     } else {
         console.log("No data found in localStorage");
         window.location.href = '/'

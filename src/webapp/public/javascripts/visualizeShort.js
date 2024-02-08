@@ -69,7 +69,6 @@ function discardUnder10(arr) {
       arr.splice(i, 1);
     }
   }
-  //console.log(arr);
   return arr;
 }
 
@@ -105,9 +104,6 @@ function dbGraph(dBRightData, dBMidData, dBLeftData, dBTime) {
           { step: "all" }
         ]
       }
-      // rangeslider beneath the graph. I dont know if it looks good, have to decide with the group (My opinion: Not that useful because we only use 45 minute data anyways)
-      // rangeslider: {range: [dBTime[0], dBTime[parseInt(document.getElementById('timespan').value)-1]]},
-      // type: 'date'
     }
   }
 
@@ -115,39 +111,33 @@ function dbGraph(dBRightData, dBMidData, dBLeftData, dBTime) {
     x: dBTime,
     y: dBLeftData,
     name: "linker Sensor",
-    // mode: 'markers',
+    mode: 'markers',
     type: 'scatter',
-    // marker: {
-    //   size: 5, // Change this value to adjust the dot size
-    // },
-    // z: 5,
-    connectgaps: false
+    marker: {
+      size: 3
+    }
   }
 
   var midSensorTrace = {
     x: dBTime,
     y: dBMidData,
     name: "mittiger Sensor",
-    //mode: 'markers',
+    mode: 'markers',
     type: 'scatter',
-    // marker: {
-    //   size: 5, // Change this value to adjust the dot size
-    // },
-    // z: 5
-    connectgaps: false
+    marker: {
+      size: 3
+    }
   }
 
   var rightSensorTrace = {
     x: dBTime,
     y: dBRightData,
     name: "rechter Sensor",
-    // mode: 'markers',
+    mode: 'markers',
     type: 'scatter',
-    // marker: {
-    //   size: 5, // Change this value to adjust the dot size
-    // },
-    // z: 5
-    connectgaps: false
+    marker: {
+      size: 3
+    }
   }
 
   var thresholdTrace = {
@@ -245,7 +235,7 @@ async function updateLiveValues(sensebox, leftSensor, midSensor, rightSensor) {
     window.location.href = '/'
   }
 }
-// Da sekundenabstände statt minuten: nicht [44] sondern eher .length-1 oder halt mit moving average
+
 function checkValue(left, mid, right) {
   const leftAvg = calculateAverage(left.slice(-60));
   const midAvg = calculateAverage(mid.slice(-60));
@@ -268,25 +258,3 @@ function closePopup() {
   document.getElementById('popup').style.display = 'none';
   document.getElementById('threshold').disabled = false;
 }
-
-// function showTooLoudAlert() {
-//   if (!badge) {
-//     badge = document.createElement('div');
-//     badge.className = 'badge';
-//     badge.innerText = 'Too Loud';
-//     document.body.appendChild(badge);
-//   } else {
-//     badge.style.display = 'block';
-//   }
-// }
-
-// // Function to hide "Too Loud" alert
-// function hideTooLoudAlert() {
-//   console.log("Attempting to hide badge...");
-//   var badge = document.querySelector('.badge');
-//   console.log("Badge found:", badge);
-//   if (badge) {
-//     console.log("hide");
-//     badge.style.display = 'none';
-//   }
-// }
