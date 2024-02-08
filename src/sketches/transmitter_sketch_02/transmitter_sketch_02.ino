@@ -277,7 +277,7 @@ void loop(){
     Serial.println(myMessage.sending_time);
 
     
-    if (averageDbaValueM10 < 500)
+    if (averageDbaValueM10 < 450)
     {
       /*matrix.clear();
       matrix.drawBitmap(0, 0, smile_bmp, 8, 8, LED_GREEN);

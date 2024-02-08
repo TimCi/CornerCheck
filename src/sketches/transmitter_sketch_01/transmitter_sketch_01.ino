@@ -191,36 +191,7 @@ void setup(){
     return;
   }
 }
-/*
-static const uint8_t PROGMEM
-    smile_bmp[] =
-        {B00111100,
-         B01000010,
-         B10100101,
-         B10000001,
-         B10100101,
-         B10011001,
-         B01000010,
-         B00111100},
-    neutral_bmp[] =
-        {B00111100,
-         B01000010,
-         B10100101,
-         B10000001,
-         B10111101,
-         B10000001,
-         B01000010,
-         B00111100},
-    frown_bmp[] =
-        {B00111100,
-         B01000010,
-         B10100101,
-         B10000001,
-         B10111101,
-         B10100101,
-         B01000010,
-         B00111100};
- */
+
 void loop(){
   unsigned long currentMillis = millis(); // current time in ms
   // check if measurementInterval expired
@@ -246,7 +217,8 @@ void loop(){
     // Calculate average DBA-Value and cast into int for efficient communication
     // ATTENTION: For better accuracy the value is multiplicated by 10 before the cast
     int averageDbaValueM10 = int(10 * 10 * log10(dbaSum / readingCount));
-    //Serial.println("Average dBA-Value in last " + String(sendingInterval) + " ms: " + String(averageDbaValueM10));
+    //Zum Kalibrieren
+    averageDbaValueM10 = averageDbaValueM10 - 40.0;
     
     // safe dBA-Value in message
     myMessage.decibel = averageDbaValueM10;
@@ -267,7 +239,7 @@ void loop(){
     Serial.println(myMessage.sending_time);
 
     
-    if (averageDbaValueM10 < 500)
+    if (averageDbaValueM10 < 450)
     {
       /*matrix.clear();
       matrix.drawBitmap(0, 0, smile_bmp, 8, 8, LED_GREEN);
