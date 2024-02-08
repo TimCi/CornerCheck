@@ -54,6 +54,7 @@ function getDB(array) {
   return dbOnlyOver10;
 }
 
+
 function getTime(array) {
   let timeOnly = [];
   for (let i = 0; i < array.length; i++) {
@@ -67,6 +68,7 @@ function discardUnder10(arr) {
   for (let i = 0; i < arr.length; i++) {
     if (arr[i] <= 10) {
       arr.splice(i, 1);
+
     }
   }
   return arr;
