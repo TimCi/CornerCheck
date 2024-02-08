@@ -103,7 +103,10 @@ function dbGraph(dBRightData, dBMidData, dBLeftData, dBTime) {
             step: 'minute',
             stepmode: 'backward'
           },
-          { step: "all" }
+          { 
+            label: '45m',
+            step: "all" 
+          }
         ]
       }
     }
