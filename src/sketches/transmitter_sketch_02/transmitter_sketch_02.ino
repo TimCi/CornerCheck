@@ -258,7 +258,7 @@ void loop(){
     //Serial.println("Average dBA-Value in last " + String(sendingInterval) + " ms: " + String(averageDbaValueM10));
     
     // safe dBA-Value in message
-    averageDbaValueM10 = averageDbaValueM10 - 180;
+    averageDbaValueM10 = averageDbaValueM10 - 190.0;
     myMessage.decibel = averageDbaValueM10;
 
     // get current time in seconds
@@ -277,7 +277,7 @@ void loop(){
     Serial.println(myMessage.sending_time);
 
     
-    if (averageDbaValueM10 < 500)
+    if (averageDbaValueM10 < 450)
     {
       /*matrix.clear();
       matrix.drawBitmap(0, 0, smile_bmp, 8, 8, LED_GREEN);

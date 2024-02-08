@@ -76,7 +76,7 @@ typedef struct data
 typedef struct measurement {
   const char* sensorId;
   float value;
-  char * createdAt;
+  String createdAt;
 }; 
 
 // struct to store incoming data
@@ -87,9 +87,6 @@ data sensors[3];
 // storage for raw time
 struct timeval tv_now;
 
-// NTP Server for time synchronization
-const char *ntpServer = "pool.ntp.org";
-
 const int receivingInterval = 1000; // in ms
 const int sendingInterval = 60000;  // in ms
 
@@ -99,8 +96,6 @@ unsigned long previousSecond = 0;
 unsigned long setupMillis = 0; // last time, the sensor was read
 int readingCount = 0;             // Count readings per sendingInterval
 int sendingCounter = 1;
-String timestamp = "";
-char * timestampchar = "";
 int errorcount = 0;
 
 void onMessageReceived(const uint8_t *macAddr, const uint8_t *incomingData, int len)
@@ -116,10 +111,10 @@ void onMessageReceived(const uint8_t *macAddr, const uint8_t *incomingData, int 
 char buffer[750];  // might be too short for many phenomenons
 measurement measurements[NUM_SENSORS];
 uint8_t num_measurements = 0;
-const int lengthMultiplikator = 56;
+const int lengthMultiplikator = 60;
 
 // function to add measurement to measurements array 
-void addMeasurement(const char* sensorId, float value, char * createdAt) {
+void addMeasurement(const char* sensorId, float value, String createdAt) {
   measurements[num_measurements].sensorId = sensorId;
   measurements[num_measurements].value = value;
   measurements[num_measurements].createdAt = createdAt;
@@ -130,7 +125,7 @@ void writeMeasurementsToClient() {
   // iterate throug the measurements array
   for (uint8_t i = 0; i < num_measurements; i++) {
     sprintf_P(buffer, PSTR("%s,%9.2f,%s\n"), measurements[i].sensorId,
-              measurements[i].value, measurements[i].createdAt);
+              measurements[i].value, measurements[i].createdAt.c_str());
     // transmit buffer to client
     client.print(buffer);
     Serial.print(buffer);
@@ -166,7 +161,7 @@ void submitValues() {
                      "\nHost: %s\nContent-Type: "
                      "text/csv\nConnection: close\nContent-Length: %i\n\n"),
                 SENSEBOX_ID, server,
-                (num_measurements * lengthMultiplikator) - 1);
+                num_measurements * lengthMultiplikator);
       // send the HTTP POST request:
       Serial.print(buffer);
       client.print(buffer);
@@ -201,14 +196,9 @@ void submitValues() {
 }
 
 
-String getTimestamp(String oldDatetime){
-  int found = oldDatetime.indexOf("-00:00");
-
-  if (found != -1) {
-    oldDatetime.replace("-00:00", "Z");
-  }
-
-  return oldDatetime;
+String getTimestamp(){
+  String timestamp_str = UTC.dateTime("Y-m-d~TH:i:s.v~Z");
+  return timestamp_str;
 }
 
 void setup()
@@ -223,15 +213,6 @@ void setup()
   initHomeWifi("MagentaWLAN-CCKB"); // for testing
 
   client.setCACert(root_ca);
-
-  Serial.println("synchronizing NTP Server");
-  // time server synchronization
-  // ACHTUNG GEHT 1 STUNDE FALSCH
-  configTime(1, 0, ntpServer);
-
-  // wait some time to ensure synchronization
-  delay(2000);
-  Serial.println("NTP Server synchronized"); 
 
   waitForSync();
 
@@ -260,8 +241,6 @@ void setup()
   setupMillis = millis();
   previousMillis = millis();
   previousSecond = millis();
-
-  Watchdog.enable(65000);
 
 }
 
@@ -294,16 +273,13 @@ void loop()
       Serial.println(secondValues[i]);
     }
 
-    timestamp = getTimestamp(myTZ.dateTime(RFC3339));
-    timestampchar = new char[timestamp.length()+1];
-    strcpy(timestampchar, timestamp.c_str());
-
-    Serial.println(timestamp);
+    Serial.println(getTimestamp());
     Serial.println(errorcount);
+    
 
-    addMeasurement(SENSOR_ID8B7, secondValues[0], timestampchar);
-    addMeasurement(SENSOR_ID8B6, secondValues[1], timestampchar);
-    addMeasurement(SENSOR_ID8B5, secondValues[2], timestampchar);
+    addMeasurement(SENSOR_ID8B7, secondValues[0], getTimestamp());
+    addMeasurement(SENSOR_ID8B6, secondValues[1], getTimestamp());
+    addMeasurement(SENSOR_ID8B5, secondValues[2], getTimestamp());
 
     readingCount=0;
     previousSecond = currentMillis;
@@ -315,12 +291,11 @@ void loop()
     Serial.println("start upload");
     submitValues();
 
-    if(errorcount > 5) {
+    if(errorcount > 59) {
       ESP.restart();
     }
 
     // eventuell reset;
-    Watchdog.reset();
     
     // update global variables:
     sendingCounter++;
