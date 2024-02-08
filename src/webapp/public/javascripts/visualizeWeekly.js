@@ -68,23 +68,23 @@ function dbGraph(dBRightData, dBMidData, dBLeftData, dBTime) {
             // Buttons for changing the size of the graph
             autorange: true,
             range: [dBTime[0], dBTime[dBTime.length - 1]],
-            rangeselector: {
-                buttons: [
-                    {
-                        count: 3,
-                        label: '3h',
-                        step: 'hour',
-                        stepmode: 'backward'
-                    },
-                    // {
-                    //     count: 6,
-                    //     label: '6h',
-                    //     step: 'hout',
-                    //     stepmode: 'backward'
-                    //},
-                    { step: "all" }
-                ]
-            },
+            // rangeselector: {
+            //     buttons: [
+            //         {
+            //             count: 3,
+            //             label: '3h',
+            //             step: 'hour',
+            //             stepmode: 'backward'
+            //         },
+            //         // {
+            //         //     count: 6,
+            //         //     label: '6h',
+            //         //     step: 'hout',
+            //         //     stepmode: 'backward'
+            //         //},
+            //         { step: "all" }
+            //     ]
+            // },
             // rangeslider beneath the graph. I dont know if it looks good, have to decide with the group (My opinion: Not that useful because we only use 45 minute data anyways)
             rangeslider: { range: [dBTime[0], dBTime[dBTime.length - 1]] },
             type: 'date'

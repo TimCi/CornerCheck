@@ -1,0 +1,75 @@
+extends layout
+
+
+block content
+    style.
+        /* CSS-Styling für die Erklärungsseite */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        h2 {
+            margin-top: 30px;
+            color: #007bff; /* Blaue Überschriften */
+        }
+
+        img {
+            display: block;
+            margin: 20px auto; /* Zentriertes Bild */
+            max-width: 100%;
+            height: auto;
+        }
+
+        .contesto {
+          text-align: justify;
+        }
+
+    h1 Erklärung Corner Check Website
+    .contesto
+      h2 Landing Page
+      p 
+        |Auf der Landing Page musst du die ID’s zu deiner (oder der zu analysierenden) Sensebox und ihren Sensoren eingeben. Diese ID’s findest du auf dem OpenSenseMap Konto deiner CornerCheck Station.
+      p 
+        |Bei Einem Klick auf „Live Anzeige“ werden dir die letzen 45 Minuten an Messungen deiner SenseBox als Graph, mit sekündlichen Messungen, angezeigt.
+      p 
+        |Wenn du stattdessen ein Datum auswählst und auf „Tagesberichte“ klickst, bekommst du eine 12 Stunden Ansicht als Graph. Diese 12 Stunden erstrecken sich von 16 Uhr des ausgewählten Tages bis 4 Uhr Morgens vom darauffolgenden Tag.
+      h2 Die Graphen
+      p 
+        |Der Graph der dir auf der jeweilige Seite angezeigt wird hat 4 Einträge. Eine rote Linie (den Grenzwert) und Punkte die in 3 Farben unterteilt sind. Jede Farbe steht für einen Sensor und jeder Punkt für einen Messwert (also eine Sekunde).
+      p 
+        |Wenn du auf einen bestimmten Messpunkt hoverst, zeigt er dir den genauen Messzeitpunkt und Messwert an.
+      p 
+        |Beim hovern über den Graph siehst du oben rechts einige Optionen. Du kannst Beispielsweise zoomen oder den Graph im jetzigen Zustand als PNG herunterladen.
+      h2 Die Live Ansicht
+      p 
+        |Der Graph zeigt initial immer für die aktuellsten 45 Minuten die Messwerte („all“), du kannst ihn aber auch mit den „15m“ und „30m“ Knöpfen, links über dem Graphen, auf die aktuellsten 15 und 30 Minuten stellen.
+      p 
+        |Einmal pro Minute werden die neu gemessenen Werte dem Graph hinzugefügt und die älteste Minute verschwindet.
+      h2 Die Tagesansicht
+      p 
+        |Der Tagesbericht zeigt die Aufzeichnungen des von dir ausgewählten Tages von 16 Uhr bis 4 Uhr.
+      p 
+        |Über dem Graph hast du außerdem die Möglichkeit noch einmal den Tag zu verstellen.
+      p 
+        |Unter dem Graph befindet sich ein Slider der eine Miniatur des eigentlichen Graphen darstellt. Dieser Slider hat 2 Schwimmer an den Seiten, die du bewegen kannst um den angezeigten Zeitraum des Graphen zu verändern.
+      h2 Die Tabelle
+      p 
+        |In der Tabelle unter dem Graph findest du einige weiter nützliche Informationen. Für jeden Sensor und alle zusammen wird dir jeweils das Lautstärkemaximum und der Durchschnitt angezeigt. Diese Daten gehören bei der Live-View immer zu den neuesten 45 Minuten und im Tagesbericht immer zu ganzen Tag.
+      p 
+        |Wundere dich nicht wenn der Durchschnitt anders wirkt als du ihn auf dem Graph einschätzen würdest. Da dB(A) Messwerte auf einer logarithmischen Skala liegen, wäre der Mittelwert von 40, 50 und 60 nicht 50, sondern ca 55.
+      h2 Der Grenzwert
+      p 
+        |Mithilfe des Grenzwertes kannst du den Grenzwert für dein Gebiet anpassen. Dieser Grenzwert wird dir in dem Graphen angezeigt und beeinflusst auch wann die Notification ausgelöst wird. Der Default Wert liegt hier bei 60 dB(A).
+      h2 Die Notification
+      p 
+        |Wenn es an deinem Kiosk zu laut werden sollte bekommst du eine Notification, das dir zeigt das es bei dir in der letzten Minute akut zu laut war.
+      p 
+        |Zu laut bedeutet, dass von einem der 3 Sensoren der durchschnittliche Schallpegel in der aktuellsten Minute über deinem eingestellten Grenzwert liegt.
+      p 
+        |Die Notification wird solange angezeigt bis du sie wegklickst. Selbst wenn du mal weg bist und so nicht in der Minute auf den Bildschirm sehen kannst, weißt du also das es zu laut war.
+      br
