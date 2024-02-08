@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title></title>
+    <link rel="stylesheet" href="/stylesheets/style.css">
+    <script src="/javascripts/getData.js" defer></script>
+  </head>
+  <body>
+    <div>
+      <h1>Willkommen in der Webapp vom Cornercheck! </h1>
+      <p>Um die Lautstärkedaten deiner CornerCheck-Station einzusehen und zu analysieren, gib bitte die sensebox-ID deiner Station an. Die vorausgefüllten IDs sind die des ersten CornerCheck-Prototypen:</p>
+    </div><b>Sensebox-ID:</b>
+    <div class="textfield">
+      <textarea id="sensebox" placeholder="sensebox-ID">65a41c9e99aa070008b3eb6f</textarea>
+    </div><b>ID des linken Sensors:</b>
+    <div class="textfield">
+      <textarea id="leftSensor" placeholder="leftSensor-ID">65a41c9e99aa070008b3eb70</textarea>
+    </div><b>ID des mittleren Sensors:</b>
+    <div class="textfield">
+      <textarea id="midSensor" placeholder="midSensor-ID">65a41c9e99aa070008b3eb71</textarea>
+    </div><b>ID des rechten Sensors:</b>
+    <div class="textfield">
+      <textarea id="rightSensor" placeholder="rightSensor-ID">65a41c9e99aa070008b3eb72</textarea>
+    </div>
+    <div class="buttons">
+      <div>
+        <button id="live">Live Anzeige</button>
+      </div>
+      <div>
+        <p>Wähle außerdem einen Tag um den Tagesbericht abzufragen:</p>
+        <form>
+          <input id="dateSelector" type="date" name="dateSelector">
+        </form>
+        <button id="weekly">Tagesberichte</button>
+      </div>
+    </div>
+    <hr>
+    <div>
+      <footer id="footer">
+        <p>Eine Erklärung zu dem Projekt und den Graphen findest du <a href="/description">hier</a>.</p>
+        <p>© 2024 Michael Brüggemann, Tim Ciroth, Finn Geßner, Martin Kriger</p>
+      </footer>
+    </div>
+  </body>
+</html>
+
+
+
+

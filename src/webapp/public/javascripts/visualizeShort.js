@@ -58,7 +58,7 @@ function getDB(array) {
 function getTime(array) {
   let timeOnly = [];
   for (let i = 0; i < array.length; i++) {
-    timeOnly.push(array[i].createdAt);
+    timeOnly.push(new Date(new Date(array[i].createdAt).getTime()));
   }
   timeOnly.reverse();
   return timeOnly;
@@ -103,7 +103,10 @@ function dbGraph(dBRightData, dBMidData, dBLeftData, dBTime) {
             step: 'minute',
             stepmode: 'backward'
           },
-          { step: "all" }
+          { 
+            label: '45m',
+            step: "all" 
+          }
         ]
       }
     }
@@ -148,7 +151,6 @@ function dbGraph(dBRightData, dBMidData, dBLeftData, dBTime) {
     name: 'Grenzwert',
     type: 'scatter',
     line: {
-      dash: 'dash',
       color: "red",
       size: 3
     },
