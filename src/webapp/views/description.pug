@@ -26,21 +26,35 @@ block content
         }
 
         .contesto {
-          text-align: justify;
+          text-align: justify;/*justify*/
         }
+    h1 Warum CornerCheck
 
+    p 
+      | Wir haben CornerCheck entwickelt, um ein Problem in Münster zu lösen: "Cornern!". Derzeit ist in Münster das "Corner", nicht mehr so möglich, wie es früher einmal war. Aber was ist "Cornern" überhaupt? "Corner" ist eine Aktivität, bei der man sich mit Freund:innen an einem Kiosk trifft (meistens an eiener Straßenecke gelegen, daher der Name) und dort mit diesen gemeinsam etwas trinkt und eine gute Zeit hat. In Münster ist dies aber zurzeit nicht erlaubt, da viele Anwohner:innen durch die "Cornernden" gestört wurden, da diese sich zu laut verhalten haben und nicht genug Rücksicht auf andere genommen haben. Und genau hier möchte "CornerCheck" ansetzen.
+    p 
+      | Wir haben ein System aus Microcontrollern (MCU), also kleinen Computern in Verbindung mit Lautstärke-Sensoren entwickelt, um den "Cornernden" zu visulaisieren, ob sie sich zu laut verhalten oder nicht. Dazu nutzen wir ein Display, welches drei unterschiedliche Modi anzeigt, die jeweils einem Dezibel-Intervall entsprechen:
+    p 
+    span.red "Rot" (> 60dB(A)): Du bist zu laut.
+    p
+    span.yellow "Gelb" (45 - 60 dB(A)): Alles noch in Ordnung.
+    p 
+    span.green "Grün" (< 45dB(A)): Du bist leise genug.
+    br
+    br
+    br
     h1 Erklärung Corner Check Website
     .contesto
       h2 Landing Page
       p 
         |Auf der Landing Page musst du die ID’s zu deiner (oder der zu analysierenden) Sensebox und ihren Sensoren eingeben. Diese ID’s findest du auf dem OpenSenseMap Konto deiner CornerCheck Station.
       p 
-        |Bei Einem Klick auf „Live Anzeige“ werden dir die letzen 45 Minuten an Messungen deiner SenseBox als Graph, mit sekündlichen Messungen, angezeigt.
+        |Bei Einem Klick auf „Live Anzeige“ werden dir die letzen 45 Minuten an Messungen deines CornerCheck Systems als Graph angezeigt.
       p 
         |Wenn du stattdessen ein Datum auswählst und auf „Tagesberichte“ klickst, bekommst du eine 12 Stunden Ansicht als Graph. Diese 12 Stunden erstrecken sich von 16 Uhr des ausgewählten Tages bis 4 Uhr Morgens vom darauffolgenden Tag.
       h2 Die Graphen
       p 
-        |Der Graph der dir auf der jeweilige Seite angezeigt wird hat 4 Einträge. Eine rote Linie (den Grenzwert) und Punkte die in 3 Farben unterteilt sind. Jede Farbe steht für einen Sensor und jeder Punkt für einen Messwert (also eine Sekunde).
+        |Der Graph der dir auf der jeweilige Seite angezeigt wird hat 4 Einträge. Eine rote Linie (den Grenzwert) und Punkte die in 3 Farben unterteilt sind. Jede Farbe steht für einen Sensor. Jeder Punkt steht für den Messwert einer Sekunde, der aus 8 Messungen pro Sekunde aggregiert wird.
       p 
         |Wenn du auf einen bestimmten Messpunkt hoverst, zeigt er dir den genauen Messzeitpunkt und Messwert an.
       p 
