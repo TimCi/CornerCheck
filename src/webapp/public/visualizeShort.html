@@ -15,7 +15,7 @@
       <div id="chart"></div>
       <div>
         <label for="threshold">Grenzwert in dB(A):</label>
-        <input id="threshold" type="number" value="55" min="0" max="100" step="5">
+        <input id="threshold" type="number" value="60" min="0" max="100" step="5">
         <script src="/javascripts/visualizeShort.js"> </script>
       </div>
       <div id="stats">
@@ -31,7 +31,13 @@
           </thead>
           <tbody></tbody>
         </table>
-        <p id="warning"></p>
+        <div class="popup-container" id="popup">
+          <div class="popup-content">
+            <h1>Zu laut!</h1>
+            <p>Die Lautstärke ist zu hoch.</p>
+            <button class="close-button" onclick="closePopup()">Verstanden</button>
+          </div>
+        </div>
       </div>
     </div>
     <hr>
