@@ -101,8 +101,10 @@ function dbGraph(dBRightData, dBMidData, dBLeftData, dBTime) {
         }
     }
 
+    var config = {responsive: true}
+
     Plotly.purge("chart");
-    Plotly.newPlot("chart", [leftSensorTrace, midSensorTrace, rightSensorTrace], layout);
+    Plotly.newPlot("chart", [leftSensorTrace, midSensorTrace, rightSensorTrace], layout, config);
 }
 
 

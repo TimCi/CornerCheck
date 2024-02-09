@@ -157,8 +157,10 @@ function dbGraph(dBRightData, dBMidData, dBLeftData, dBTime) {
     z: 10
   }
 
+  var config = {responsive: true}
+
   Plotly.purge("chart");
-  Plotly.newPlot("chart", [leftSensorTrace, midSensorTrace, rightSensorTrace], layout);
+  Plotly.newPlot("chart", [leftSensorTrace, midSensorTrace, rightSensorTrace], layout, config);
   Plotly.addTraces('chart', thresholdTrace);
 }
 
