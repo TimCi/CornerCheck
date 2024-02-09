@@ -1,6 +1,5 @@
 "use strict"
 
-
 document.addEventListener("DOMContentLoaded", function () {
 
     const sensebox = JSON.parse(localStorage.getItem("sensebox"));
@@ -56,9 +55,6 @@ function getTime(array) {
 // Build inital plotly graph with Data and Time, also add threshold line
 function dbGraph(dBRightData, dBMidData, dBLeftData, dBTime) {
 
-    // var threshold = document.getElementById('threshold').value;
-    // var thresholdLine = Array(dBRightData.length).fill(threshold);
-
     const layout = {
         yaxis: { title: 'Dezibel in db(A)' }, // range: [0, 80] to set the axis scale undinamically
         xaxis: {
@@ -66,24 +62,7 @@ function dbGraph(dBRightData, dBMidData, dBLeftData, dBTime) {
             // Buttons for changing the size of the graph
             autorange: true,
             range: [dBTime[0], dBTime[dBTime.length - 1]],
-            rangeselector: {
-                buttons: [
-                    {
-                        count: 3,
-                        label: '3h',
-                        step: 'hour',
-                        stepmode: 'backward'
-                    },
-                    {
-                        count: 6,
-                        label: '6h',
-                        step: 'hout',
-                        stepmode: 'backward'
-                    },
-                    { step: "all" }
-                ]
-            },
-            // rangeslider beneath the graph. I dont know if it looks good, have to decide with the group (My opinion: Not that useful because we only use 45 minute data anyways)
+            // rangeslider beneath the graph.
             rangeslider: { range: [dBTime[0], dBTime[dBTime.length - 1]] },
             type: 'date'
         }
@@ -93,30 +72,34 @@ function dbGraph(dBRightData, dBMidData, dBLeftData, dBTime) {
         x: dBTime,
         y: dBLeftData,
         name: "linker Sensor",
-        type: 'scatter'
+        type: 'scatter',
+        mode: "markers",
+        marker: {
+            size: 2, // Change this value to adjust the dot size
+        }
     }
 
     var midSensorTrace = {
         x: dBTime,
         y: dBMidData,
         name: "mittiger Sensor",
-        type: 'scatter'
+        type: 'scatter',
+        mode: "markers",
+        marker: {
+            size: 2, // Change this value to adjust the dot size
+        }
     }
 
     var rightSensorTrace = {
         x: dBTime,
         y: dBRightData,
         name: "rechter Sensor",
-        type: 'scatter'
+        type: 'scatter',
+        mode: "markers",
+        marker: {
+            size: 2, // Change this value to adjust the dot size
+        }
     }
-
-    // var thresholdTrace = {
-    //     x: dBTime,
-    //     y: thresholdLine,
-    //     name: 'Grenzwert',
-    //     type: 'scatter',
-    //     line: {dash: 'dash'}
-    // } 
 
     Plotly.purge("chart");
     Plotly.newPlot("chart", [leftSensorTrace, midSensorTrace, rightSensorTrace], layout);
@@ -168,27 +151,81 @@ function calculateAverage(arr) {
 
 
 async function updateValues(sensebox, leftSensor, midSensor, rightSensor, earlyDate, lateDate) {
+    // last 2.5 hours of night
+    const Date02 = new Date(new Date(lateDate).getTime() - (2.5 * 60 * 60 * 1000));
+    const leftURL02 = "https://api.opensensemap.org/boxes/" + sensebox + "/data/" + leftSensor + "?from-date=" + Date02.toISOString() + "&to-date=" + lateDate.toISOString() + "&download=false&format=json";
+    const leftResponse02 = await fetch(leftURL02);
+    let leftData02 = await leftResponse02.json();
+    const midURL02 = "https://api.opensensemap.org/boxes/" + sensebox + "/data/" + midSensor + "?from-date=" + Date02.toISOString() + "&to-date=" + lateDate.toISOString() + "&download=false&format=json";
+    const midResponse02 = await fetch(midURL02);
+    let midData02 = await midResponse02.json();
+    const rightURL02 = "https://api.opensensemap.org/boxes/" + sensebox + "/data/" + rightSensor + "?from-date=" + Date02.toISOString() + "&to-date=" + lateDate.toISOString() + "&download=false&format=json";
+    const rightResponse02 = await fetch(rightURL02);
+    let rightData02 = await rightResponse02.json();
 
-    const boxURL = "https://api.opensensemap.org/boxes/" + sensebox + "/sensors";
-    const leftURL = "https://api.opensensemap.org/boxes/" + sensebox + "/data/" + leftSensor + "?from-date=" + earlyDate.toISOString() + "&to-date=" + lateDate.toISOString() + "&download=false&format=json";
-    const midURL = "https://api.opensensemap.org/boxes/" + sensebox + "/data/" + midSensor + "?from-date=" + earlyDate.toISOString() + "&to-date=" + lateDate.toISOString() + "&download=false&format=json";
-    const rightURL = "https://api.opensensemap.org/boxes/" + sensebox + "/data/" + rightSensor + "?from-date=" + earlyDate.toISOString() + "&to-date=" + lateDate.toISOString() + "&download=false&format=json";
+    // last 5 hours of night
+    const Date23 = new Date(new Date(lateDate).getTime() - (5 * 60 * 60 * 1000));
+    const leftURL23 = "https://api.opensensemap.org/boxes/" + sensebox + "/data/" + leftSensor + "?from-date=" + Date23.toISOString() + "&to-date=" + Date02.toISOString() + "&download=false&format=json";
+    const leftResponse23 = await fetch(leftURL23);
+    let leftData23 = await leftResponse23.json();
+    const midURL23 = "https://api.opensensemap.org/boxes/" + sensebox + "/data/" + midSensor + "?from-date=" + Date23.toISOString() + "&to-date=" + Date02.toISOString() + "&download=false&format=json";
+    const midResponse23 = await fetch(midURL23);
+    let midData23 = await midResponse23.json();
+    const rightURL23 = "https://api.opensensemap.org/boxes/" + sensebox + "/data/" + rightSensor + "?from-date=" + Date23.toISOString() + "&to-date=" + Date02.toISOString() + "&download=false&format=json";
+    const rightResponse23 = await fetch(rightURL23);
+    let rightData23 = await rightResponse23.json();
+
+    // last 7.5 hours of night
+    const Date21 = new Date(new Date(lateDate).getTime() - (7.5 * 60 * 60 * 1000));
+    const leftURL21 = "https://api.opensensemap.org/boxes/" + sensebox + "/data/" + leftSensor + "?from-date=" + Date21.toISOString() + "&to-date=" + Date23.toISOString() + "&download=false&format=json";
+    const leftResponse21 = await fetch(leftURL21);
+    let leftData21 = await leftResponse21.json();
+    const midURL21 = "https://api.opensensemap.org/boxes/" + sensebox + "/data/" + midSensor + "?from-date=" + Date21.toISOString() + "&to-date=" + Date23.toISOString() + "&download=false&format=json";
+    const midResponse21 = await fetch(midURL21);
+    let midData21 = await midResponse21.json();
+    const rightURL21 = "https://api.opensensemap.org/boxes/" + sensebox + "/data/" + rightSensor + "?from-date=" + Date21.toISOString() + "&to-date=" + Date23.toISOString() + "&download=false&format=json";
+    const rightResponse21 = await fetch(rightURL21);
+    let rightData21 = await rightResponse21.json();
+
+    // last 10 hours of night
+    const Date18 = new Date(new Date(lateDate).getTime() - (10 * 60 * 60 * 1000));
+    const leftURL18 = "https://api.opensensemap.org/boxes/" + sensebox + "/data/" + leftSensor + "?from-date=" + Date18.toISOString() + "&to-date=" + Date21.toISOString() + "&download=false&format=json";
+    const leftResponse18 = await fetch(leftURL18);
+    let leftData18 = await leftResponse18.json();
+    const midURL18 = "https://api.opensensemap.org/boxes/" + sensebox + "/data/" + midSensor + "?from-date=" + Date18.toISOString() + "&to-date=" + Date21.toISOString() + "&download=false&format=json";
+    const midResponse18 = await fetch(midURL18);
+    let midData18 = await midResponse18.json();
+    const rightURL18 = "https://api.opensensemap.org/boxes/" + sensebox + "/data/" + rightSensor + "?from-date=" + Date18.toISOString() + "&to-date=" + Date21.toISOString() + "&download=false&format=json";
+    const rightResponse18 = await fetch(rightURL18);
+    let rightData18 = await rightResponse18.json();
+
+    const leftURL = "https://api.opensensemap.org/boxes/" + sensebox + "/data/" + leftSensor + "?from-date=" + earlyDate.toISOString() + "&to-date=" + Date18.toISOString() + "&download=false&format=json";
+    const midURL = "https://api.opensensemap.org/boxes/" + sensebox + "/data/" + midSensor + "?from-date=" + earlyDate.toISOString() + "&to-date=" + Date18.toISOString() + "&download=false&format=json";
+    const rightURL = "https://api.opensensemap.org/boxes/" + sensebox + "/data/" + rightSensor + "?from-date=" + earlyDate.toISOString() + "&to-date=" + Date18.toISOString() + "&download=false&format=json";
 
     const leftResponse = await fetch(leftURL);
     const midResponse = await fetch(midURL);
     const rightResponse = await fetch(rightURL);
 
-    let leftData = await leftResponse.json();
-    let midData = await midResponse.json();
-    let rightData = await rightResponse.json();
+    let leftData16 = await leftResponse.json();
+    let midData16 = await midResponse.json();
+    let rightData16 = await rightResponse.json();
 
-    if (leftData && midData && rightData) {
-        localStorage.setItem("leftData", JSON.stringify(leftData));
-        localStorage.setItem("midData", JSON.stringify(midData));
-        localStorage.setItem("rightData", JSON.stringify(rightData));
+    if (leftData16 && midData16 && rightData16) {
+        let leftData = leftData02.concat(leftData23);
+        let midData = midData02.concat(midData23);
+        let rightData = rightData02.concat(rightData23);
+        leftData = leftData.concat(leftData21);
+        midData = midData.concat(midData21);
+        rightData = rightData.concat(rightData21);
+        leftData = leftData.concat(leftData18);
+        midData = midData.concat(midData18);
+        rightData = rightData.concat(rightData18);
+        leftData = leftData.concat(leftData16);
+        midData = midData.concat(midData16);
+        rightData = rightData.concat(rightData16);
         dbGraph(getDB(leftData), getDB(midData), getDB(rightData), getTime(leftData));
         showAvgMax(getDB(leftData), getDB(midData), getDB(rightData));
-        //checkValue(getDB(leftData), getDB(midData), getDB(rightData));
     } else {
         console.log("No data found in localStorage");
         window.location.href = '/'

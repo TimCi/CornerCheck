@@ -2,28 +2,37 @@
 #include <esp_now.h>
 #include <esp_wifi.h>
 #include <WiFi.h>
-#include <stdlib.h>
 #include "custom_wifi_init.h"
 #include <Adafruit_GFX.h>
 #include "Adafruit_LEDBackpack.h"
+#include "esp_wpa2.h" 
 #include <Adafruit_NeoPixel.h> //Library Adafruit NeoMatrix required 
 #ifdef __AVR__
- #include <avr/power.h> 
+ #include <avr/power.h>
 #endif
 
-// MAC adresses
-//uint8_t receiverAddress[] = {0x4D, 0x61, 0x72, 0x74, 0x69, 0x02};
+
+
+// Certificate 
+// SHA1 fingerprint is broken. using root SDRG Root X1 valid until 04 Jun 2035
+// 11:04:38 GMT ISRGRootX1.crt
+
+
+// MAC adress
+// uint8_t myAddress[] = {0x4D, 0x61, 0x72, 0x74, 0x69, 0x02};
 uint8_t receiverAddress[] = {0x4E, 0xA1, 0x72, 0x74, 0x69, 0x03};
-uint8_t myAddress[] = {0x54, 0x69, 0x6D, 0x0A, 0x00, 0x00};
+uint8_t myAddress[] = {0x4E, 0xA1, 0x72, 0x74, 0x69, 0x02};
 
 // Information of the device to connect to
 esp_now_peer_info_t peerInfo;
 
-// data that will be send
-typedef struct data {
+typedef struct data
+{
   int decibel;
+  // time_t measurement_time;
   int64_t sending_time;
-  int64_t latency; // will be empty and ist only used in the receiver
+  int64_t latency;
+
 } data;
 
 // storage for the message to sent
@@ -191,7 +200,36 @@ void setup(){
     return;
   }
 }
-
+/*
+static const uint8_t PROGMEM
+    smile_bmp[] =
+        {B00111100,
+         B01000010,
+         B10100101,
+         B10000001,
+         B10100101,
+         B10011001,
+         B01000010,
+         B00111100},
+    neutral_bmp[] =
+        {B00111100,
+         B01000010,
+         B10100101,
+         B10000001,
+         B10111101,
+         B10000001,
+         B01000010,
+         B00111100},
+    frown_bmp[] =
+        {B00111100,
+         B01000010,
+         B10100101,
+         B10000001,
+         B10111101,
+         B10100101,
+         B01000010,
+         B00111100};
+ */
 void loop(){
   unsigned long currentMillis = millis(); // current time in ms
   // check if measurementInterval expired
@@ -217,9 +255,10 @@ void loop(){
     // Calculate average DBA-Value and cast into int for efficient communication
     // ATTENTION: For better accuracy the value is multiplicated by 10 before the cast
     int averageDbaValueM10 = int(10 * 10 * log10(dbaSum / readingCount));
-    //Zum Kalibrieren
+    //Serial.println("Average dBA-Value in last " + String(sendingInterval) + " ms: " + String(averageDbaValueM10));
     
     // safe dBA-Value in message
+    averageDbaValueM10 = averageDbaValueM10 - 190.0;
     myMessage.decibel = averageDbaValueM10;
 
     // get current time in seconds

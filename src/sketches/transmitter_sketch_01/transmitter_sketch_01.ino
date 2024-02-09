@@ -4,10 +4,16 @@
 #include <WiFi.h>
 #include <stdlib.h>
 #include "custom_wifi_init.h"
+#include <Adafruit_GFX.h>
+#include "Adafruit_LEDBackpack.h"
+#include <Adafruit_NeoPixel.h> //Library Adafruit NeoMatrix required 
+#ifdef __AVR__
+ #include <avr/power.h> 
+#endif
 
 // MAC adresses
 //uint8_t receiverAddress[] = {0x4D, 0x61, 0x72, 0x74, 0x69, 0x02};
-uint8_t receiverAddress[] = {0x4E, 0xA1, 0x72, 0x74, 0x69, 0x02};
+uint8_t receiverAddress[] = {0x4E, 0xA1, 0x72, 0x74, 0x69, 0x03};
 uint8_t myAddress[] = {0x54, 0x69, 0x6D, 0x0A, 0x00, 0x01};
 
 // Information of the device to connect to
@@ -32,6 +38,9 @@ const char* ntpServer = "pool.ntp.org";
 #define SoundSensorPin 3  // this pin read the analog voltage from the sound level meter
 #define VREF  5.0 // voltage on AREF pin,default:operating voltage
 
+#define LED_PIN    5 // select PIN connected to matrix DIN0
+#define LED_COUNT 64
+
 const int measurementInterval = 125; // in ms
 const int sendingInterval = 1000; // in ms
 
@@ -50,6 +59,79 @@ void messageSent(const uint8_t *macAddr, esp_now_send_status_t status) {
   }
 }
 
+//Adafruit_8x8matrix matrix = Adafruit_8x8matrix();
+//Adafruit_BicolorMatrix matrix = Adafruit_BicolorMatrix();
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
+
+void smileFace () { 
+  int smileyArr[LED_COUNT] = {
+    0,0,1,1,1,1,0,0,
+    0,1,0,0,0,0,1,0,
+    1,0,1,0,0,1,0,1,
+    1,0,0,0,0,0,0,1,
+    1,0,1,0,0,1,0,1,
+    1,0,0,1,1,0,0,1,
+    0,1,0,0,0,0,1,0,
+    0,0,1,1,1,1,0,0,
+  };
+  int col = 0;
+  for (int i = 0; i < LED_COUNT; i++) {  
+    strip.show();
+    if(smileyArr[i] == 1) {
+      col = 255;
+    }
+    strip.setPixelColor(i, 0, col, 0);
+    col = 0;
+    }
+}
+
+void neutralFace () { 
+  int smileyArr[LED_COUNT] = {
+    0,0,1,1,1,1,0,0,
+    0,1,0,0,0,0,1,0,
+    1,0,1,0,0,1,0,1,
+    1,0,0,0,0,0,0,1,
+    1,0,1,1,1,1,0,1,
+    1,0,0,0,0,0,0,1,
+    0,1,0,0,0,0,1,0,
+    0,0,1,1,1,1,0,0,
+  };
+  int col1 = 0;
+  int col2 = 0;
+  for (int i = 0; i < LED_COUNT; i++) {  
+    strip.show();
+    if(smileyArr[i] == 1) {
+      col1 = 255;
+      col2 = 165;
+    }
+    strip.setPixelColor(i, col1, col2, 0);
+    col1 = 0;
+    col2 = 0;
+    }
+}
+
+void frownFace () { 
+  int smileyArr[LED_COUNT] = {
+    0,0,1,1,1,1,0,0,
+    0,1,0,0,0,0,1,0,
+    1,0,1,0,0,1,0,1,
+    1,0,0,0,0,0,0,1,
+    1,0,1,1,1,1,0,1,
+    1,0,1,0,0,1,0,1,
+    0,1,0,0,0,0,1,0,
+    0,0,1,1,1,1,0,0,
+  };
+  int col = 0;
+  for (int i = 0; i < LED_COUNT; i++) {  
+    strip.show();
+    if(smileyArr[i] == 1) {
+      col = 255;
+    }
+    strip.setPixelColor(i, col, 0, 0);
+    col = 0;
+    }
+}
+
 
 void setup(){
   Serial.begin(115200);
@@ -61,9 +143,9 @@ void setup(){
   srand(1);
 
   // estatblish wifi connection
-  initUniWiFi("uni-ms");
-  //initHomeWifi(""); // for testing
-  
+  //initUniWiFi("uni-ms");
+  initHomeWifi("MagentaWLAN-CCKB"); // for testing
+
   Serial.println("synchronizing NTP Server");
   // time server synchronization
   // ACHTUNG GEHT 1 STUNDE FALSCH
@@ -89,7 +171,14 @@ void setup(){
     return;
   }
   
-  esp_now_register_send_cb(messageSent);   
+  esp_now_register_send_cb(messageSent);
+  //matrix.begin(0x70); // pass in the address
+
+  strip.begin();           
+  strip.show();            
+  strip.setBrightness(50); 
+
+  delay(40);
 
   // set options for connection to peer device
   memcpy(peerInfo.peer_addr, receiverAddress, 6); // deep-copy cause of array immutability
@@ -102,7 +191,7 @@ void setup(){
     return;
   }
 }
- 
+
 void loop(){
   unsigned long currentMillis = millis(); // current time in ms
   // check if measurementInterval expired
@@ -115,8 +204,9 @@ void loop(){
     //Serial.print(dbaValue,1);
     //Serial.println(" dBA");
 
+
     // update global variables:
-    dbaSum += pow(10,(dbaValue / 10));
+    dbaSum += pow(10,(dbaValue / 10.0));
     readingCount++;
     previousMillis = currentMillis;
   }
@@ -127,7 +217,8 @@ void loop(){
     // Calculate average DBA-Value and cast into int for efficient communication
     // ATTENTION: For better accuracy the value is multiplicated by 10 before the cast
     int averageDbaValueM10 = int(10 * 10 * log10(dbaSum / readingCount));
-    //Serial.println("Average dBA-Value in last " + String(sendingInterval) + " ms: " + String(averageDbaValueM10));
+    //Zum Kalibrieren
+    averageDbaValueM10 = averageDbaValueM10 - 50.0;
     
     // safe dBA-Value in message
     myMessage.decibel = averageDbaValueM10;
@@ -146,6 +237,34 @@ void loop(){
     Serial.println(myMessage.decibel);
     Serial.print("Sending time [s sind 01.01.1970]: ");
     Serial.println(myMessage.sending_time);
+
+    
+    if (averageDbaValueM10 < 450)
+    {
+      /*matrix.clear();
+      matrix.drawBitmap(0, 0, smile_bmp, 8, 8, LED_GREEN);
+      matrix.drawBitmap(0, 0, smile_bmp, 8, 8, LED_ON);
+      matrix.writeDisplay();*/
+	    smileFace();
+    }
+    else if (averageDbaValueM10 < 600) // 5 dBA lower than the 45dBA threshold
+    {
+      /*matrix.clear();
+      //matrix.drawBitmap(0, 0, neutral_bmp, 8, 8, LED_YELLOW);
+      matrix.drawBitmap(0, 0, neutral_bmp, 8, 8, LED_ON);
+      matrix.writeDisplay();*/
+	    neutralFace();
+    }
+    else
+    {
+      /*matrix.clear();
+      //matrix.drawBitmap(0, 0, frown_bmp, 8, 8, LED_RED);
+      matrix.drawBitmap(0, 0, frown_bmp, 8, 8, LED_ON);
+      matrix.writeDisplay();*/
+	    frownFace();
+	
+    }
+
 
     sendingCounter++;
     dbaSum=0;

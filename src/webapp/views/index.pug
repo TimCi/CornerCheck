@@ -4,18 +4,21 @@ block links
   script(src='/javascripts/getData.js', defer)
 
 block content
-  h1= title
   div
-    p Willkommen in der Webapp vom #{title}! 
-    p Um die Lautstärkedaten deiner CornerCheck-Station einzusehen und zu analysieren, gib bitte die sensebox-ID deiner Station an:
+    h1 Willkommen in der Webapp vom #{title}! 
+    p Um die Lautstärkedaten deiner CornerCheck-Station einzusehen und zu analysieren, gib bitte die sensebox-ID deiner Station an. Die vorausgefüllten IDs sind die des ersten CornerCheck-Prototypen:
+  b Sensebox-ID:
   .textfield
-    textarea(id=`sensebox`, placeholder=`sensebox-ID`)
+    textarea(id=`sensebox` placeholder=`sensebox-ID`) 65a41c9e99aa070008b3eb6f
+  b ID des linken Sensors:
   .textfield
-    textarea(id=`leftSensor`, placeholder=`leftSensor-ID`)
+    textarea(id=`leftSensor` placeholder=`leftSensor-ID`) 65a41c9e99aa070008b3eb70
+  b ID des mittleren Sensors:
   .textfield
-    textarea(id=`midSensor`, placeholder=`midSensor-ID`)
+    textarea(id=`midSensor` placeholder=`midSensor-ID`) 65a41c9e99aa070008b3eb71
+  b ID des rechten Sensors:
   .textfield
-    textarea(id=`rightSensor`, placeholder=`rightSensor-ID`)
+    textarea(id=`rightSensor` placeholder=`rightSensor-ID`) 65a41c9e99aa070008b3eb72
   .buttons
     div
       button(id='live') Live Anzeige
