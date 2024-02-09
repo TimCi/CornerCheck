@@ -75,7 +75,7 @@ function dbGraph(dBRightData, dBMidData, dBLeftData, dBTime) {
         type: 'scatter',
         mode: "markers",
         marker: {
-            size: 2, // Change this value to adjust the dot size
+            size: 1, // Change this value to adjust the dot size
         }
     }
 
@@ -86,7 +86,7 @@ function dbGraph(dBRightData, dBMidData, dBLeftData, dBTime) {
         type: 'scatter',
         mode: "markers",
         marker: {
-            size: 2, // Change this value to adjust the dot size
+            size: 1, // Change this value to adjust the dot size
         }
     }
 
@@ -97,7 +97,7 @@ function dbGraph(dBRightData, dBMidData, dBLeftData, dBTime) {
         type: 'scatter',
         mode: "markers",
         marker: {
-            size: 2, // Change this value to adjust the dot size
+            size: 1, // Change this value to adjust the dot size
         }
     }
 
