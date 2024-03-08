@@ -23,7 +23,7 @@ esp_now_peer_info_t peerInfo;
 typedef struct data {
   int decibel;
   int64_t sending_time;
-  int64_t latency; // will be empty and ist only used in the receiver
+  int64_t latency; 
 } data;
 
 // storage for the message to sent
@@ -59,10 +59,11 @@ void messageSent(const uint8_t *macAddr, esp_now_send_status_t status) {
   }
 }
 
-//Adafruit_8x8matrix matrix = Adafruit_8x8matrix();
-//Adafruit_BicolorMatrix matrix = Adafruit_BicolorMatrix();
+// initialize LED-Matrix
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
 
+
+// function to show green happy face 
 void smileFace () { 
   int smileyArr[LED_COUNT] = {
     0,0,1,1,1,1,0,0,
@@ -85,6 +86,8 @@ void smileFace () {
     }
 }
 
+
+// function to show orange neutral face 
 void neutralFace () { 
   int smileyArr[LED_COUNT] = {
     0,0,1,1,1,1,0,0,
@@ -110,6 +113,7 @@ void neutralFace () {
     }
 }
 
+// function to show red frown face 
 void frownFace () { 
   int smileyArr[LED_COUNT] = {
     0,0,1,1,1,1,0,0,
@@ -143,8 +147,7 @@ void setup(){
   srand(1);
 
   // estatblish wifi connection
-  //initUniWiFi("uni-ms");
-  initHomeWifi("MagentaWLAN-CCKB"); // for testing
+  initUniWiFi("uni-ms");
 
   Serial.println("synchronizing NTP Server");
   // time server synchronization
@@ -155,6 +158,7 @@ void setup(){
   delay(10000);
   Serial.println("NTP Server synchronized");
 
+  //initialize ESP-NOW
   WiFi.mode(WIFI_STA);
   Serial.print("Old ESP Board MAC Address:  ");
   Serial.println(WiFi.macAddress());
@@ -172,8 +176,8 @@ void setup(){
   }
   
   esp_now_register_send_cb(messageSent);
-  //matrix.begin(0x70); // pass in the address
 
+  //setup LED-Matrix
   strip.begin();           
   strip.show();            
   strip.setBrightness(50); 
@@ -194,16 +198,13 @@ void setup(){
 
 void loop(){
   unsigned long currentMillis = millis(); // current time in ms
+
   // check if measurementInterval expired
   if (currentMillis - previousMillis >= measurementInterval) 
   {
     float voltageValue,dbaValue;
     voltageValue = analogReadMilliVolts(SoundSensorPin) / 1000.0; // measure Voltage of Sensor
     dbaValue = voltageValue * 50.0;  //convert voltage to decibel value
-    //print measurements for testing:
-    //Serial.print(dbaValue,1);
-    //Serial.println(" dBA");
-
 
     // update global variables:
     dbaSum += pow(10,(dbaValue / 10.0));
@@ -214,10 +215,9 @@ void loop(){
   // check if sendingInterval expired
   if (currentMillis >= sendingInterval * sendingCounter) 
   {
-    // Calculate average DBA-Value and cast into int for efficient communication
+    // calculate average DBA-Value and cast into int for efficient communication
     // ATTENTION: For better accuracy the value is multiplicated by 10 before the cast
     int averageDbaValueM10 = int(10 * 10 * log10(dbaSum / readingCount));
-    //Zum Kalibrieren
     
     // safe dBA-Value in message
     myMessage.decibel = averageDbaValueM10;
@@ -238,33 +238,21 @@ void loop(){
     Serial.println(myMessage.sending_time);
 
     
+    // decide which face the LED-Matrix should show
     if (averageDbaValueM10 < 450)
     {
-      /*matrix.clear();
-      matrix.drawBitmap(0, 0, smile_bmp, 8, 8, LED_GREEN);
-      matrix.drawBitmap(0, 0, smile_bmp, 8, 8, LED_ON);
-      matrix.writeDisplay();*/
 	    smileFace();
     }
     else if (averageDbaValueM10 < 600) // 5 dBA lower than the 45dBA threshold
     {
-      /*matrix.clear();
-      //matrix.drawBitmap(0, 0, neutral_bmp, 8, 8, LED_YELLOW);
-      matrix.drawBitmap(0, 0, neutral_bmp, 8, 8, LED_ON);
-      matrix.writeDisplay();*/
 	    neutralFace();
     }
     else
     {
-      /*matrix.clear();
-      //matrix.drawBitmap(0, 0, frown_bmp, 8, 8, LED_RED);
-      matrix.drawBitmap(0, 0, frown_bmp, 8, 8, LED_ON);
-      matrix.writeDisplay();*/
 	    frownFace();
-	
     }
 
-
+    // update global variables
     sendingCounter++;
     dbaSum=0;
     readingCount=0;
