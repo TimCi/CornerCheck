@@ -7,13 +7,12 @@
 #include <WiFiClientSecure.h>
 #include "esp_wpa2.h" 
 #include <ezTime.h>
-#include <Adafruit_SleepyDog.h>
 
 char server[] = "ingress.opensensemap.org";
 
 WiFiClientSecure client;
-Timezone myTZ;
 
+//define senseBox sensorIDs
 const char SENSOR_ID8B7[] PROGMEM = "65a41c9e99aa070008b3eb70";
 const char SENSOR_ID8B6[] PROGMEM = "65a41c9e99aa070008b3eb71";
 const char SENSOR_ID8B5[] PROGMEM = "65a41c9e99aa070008b3eb72";
@@ -94,10 +93,12 @@ unsigned long currentMillis = 0;
 unsigned long previousMillis = 0;
 unsigned long previousSecond = 0;
 unsigned long setupMillis = 0; // last time, the sensor was read
-int readingCount = 0;             // Count readings per sendingInterval
+int readingCount = 0;          // Count readings per sendingInterval
 int sendingCounter = 1;
-int errorcount = 0;
+int resetcount = 0; 
 
+
+//function to receive values from 'Transmitter-MCUs'
 void onMessageReceived(const uint8_t *macAddr, const uint8_t *incomingData, int len)
 {
   memcpy(&stationMsg, incomingData, sizeof(stationMsg));
@@ -134,12 +135,13 @@ void writeMeasurementsToClient() {
   num_measurements = 0;
 } 
 
+//send measurementsarray to client
 void submitValues() {
 
   while (WiFi.status() != WL_CONNECTED) {
     Serial.println("Connection to WiFi lost. Reconnecting.");
-    //initUniWiFi("uni-ms");
-    initHomeWifi("MagentaWLAN-CCKB");
+    // estatblish wifi connection
+    initUniWiFi("uni-ms");
     delay(500);
   }
 
@@ -195,7 +197,7 @@ void submitValues() {
   }
 }
 
-
+// funtion to get a RTC-Timestamp
 String getTimestamp(){
   String timestamp_str = UTC.dateTime("Y-m-d~TH:i:s.v~Z");
   return timestamp_str;
@@ -209,13 +211,12 @@ void setup()
 
 
   // estatblish wifi connection
-  //initUniWiFi("uni-ms");
-  initHomeWifi("MagentaWLAN-CCKB"); // for testing
+  initUniWiFi("uni-ms");
 
   client.setCACert(root_ca);
-
   waitForSync();
 
+  //initialize ESP-NOW
   WiFi.mode(WIFI_STA);
   Serial.print("Old ESP Board MAC Address:  ");
   Serial.println(WiFi.macAddress());
@@ -235,9 +236,8 @@ void setup()
   }
 
   esp_now_register_recv_cb(onMessageReceived);
-  //matrix.begin(0x70); // pass in the address
 
-
+  //set correct variables for intervalls
   setupMillis = millis();
   previousMillis = millis();
   previousSecond = millis();
@@ -248,8 +248,8 @@ void loop()
 {
   if (WiFi.status() != WL_CONNECTED) {
     Serial.println("Connection to WiFi lost again. Reconnecting.");
-    initHomeWifi("MagentaWLAN-CCKB");
-    //initUniWiFi("uni-ms");
+    // estatblish wifi connection
+    initUniWiFi("uni-ms");
   }
 
   unsigned long currentMillis = millis(); // current time in ms
@@ -263,6 +263,7 @@ void loop()
     secondValues[1] = 0.0;
     secondValues[2] = 0.0;
 
+    // print all 3 values per second
     for (int i = 0; i < 3; i++){
     // Change dBA*10 ints to normal dBA floats
       secondValues[i] = sensors[i].decibel / 10.0;
@@ -273,16 +274,14 @@ void loop()
       Serial.println(secondValues[i]);
     }
 
-    Serial.println(getTimestamp());
-    Serial.println(errorcount);
-    
-
+    //add measurements to measurementsarray
     addMeasurement(SENSOR_ID8B7, secondValues[0], getTimestamp());
     addMeasurement(SENSOR_ID8B6, secondValues[1], getTimestamp());
     addMeasurement(SENSOR_ID8B5, secondValues[2], getTimestamp());
 
     readingCount=0;
     previousSecond = currentMillis;
+
   }
 
   // check if sendingInterval expired
@@ -291,11 +290,11 @@ void loop()
     Serial.println("start upload");
     submitValues();
 
-    if(errorcount > 59) {
+    // reset of the MCU after 1 hour of sending
+    if(resetcount > 59) {
       ESP.restart();
     }
 
-    // eventuell reset;
     
     // update global variables:
     sendingCounter++;
